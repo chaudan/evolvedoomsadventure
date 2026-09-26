@@ -318,7 +318,7 @@
     brute:{name:'Brute',hp:8,speed:.86,damage:17,scale:1.25,aura:0x8e949b},
     hexer:{name:'Hexer',hp:6,speed:1.0,damage:9,scale:1.04,aura:0xb987e8,ranged:true,range:6.1,shotEvery:1.75,shotDamage:9,shotColor:0xb77cff},
     reaper:{name:'Reaper',hp:11,speed:1.38,damage:14,scale:1.08,aura:0x7dd8e6,ranged:true,range:4.9,shotEvery:2.15,shotDamage:12,shotColor:0x75dff2},
-    boss:{name:'Ancient Ghastly',hp:48,speed:1.0,damage:21,scale:1.8,aura:0xd3d7dc,ranged:true,range:5.8,shotEvery:1.5,shotDamage:15,shotColor:0xc7ccda}
+    boss:{name:'Ancient Ghastly',hp:24,speed:1.0,damage:21,scale:1.8,aura:0xd3d7dc,ranged:true,range:5.8,shotEvery:1.5,shotDamage:15,shotColor:0xc7ccda}
   };
 
   const mats = {
@@ -665,11 +665,12 @@
   }
 
   function clearAdventureLayer(){
+    const sharedMaterials=new Set(Object.values(mats));
     while(adventureLayer.children.length){
       const child=adventureLayer.children.pop();
       child.traverse?.(o=>{
         if(o.geometry) o.geometry.dispose?.();
-        if(o.material && !Array.isArray(o.material)) o.material.dispose?.();
+        if(o.material && !Array.isArray(o.material) && !sharedMaterials.has(o.material)) o.material.dispose?.();
       });
     }
     levelItems.length=0;
