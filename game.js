@@ -92,6 +92,183 @@
     return m;
   }
 
+  function toon(color, opts = {}) {
+    return new THREE.MeshToonMaterial({
+      color,
+      transparent: !!opts.transparent,
+      opacity: opts.opacity ?? 1,
+      emissive: opts.emissive ?? 0x000000,
+      emissiveIntensity: opts.emissiveIntensity ?? 0,
+      side: opts.side ?? THREE.FrontSide
+    });
+  }
+
+  function part(parent, geometry, material, position, scale = [1,1,1], rotation = [0,0,0], cast = true) {
+    const m = new THREE.Mesh(geometry, material);
+    m.position.set(position[0], position[1], position[2]);
+    m.scale.set(scale[0], scale[1], scale[2]);
+    m.rotation.set(rotation[0], rotation[1], rotation[2]);
+    m.castShadow = cast;
+    m.receiveShadow = cast;
+    parent.add(m);
+    return m;
+  }
+
+  function makeMagicOrb(parent, x, y, z, radius, color = 0xff244c) {
+    const g = new THREE.Group();
+    g.position.set(x, y, z);
+    parent.add(g);
+    const core = part(g, new THREE.SphereGeometry(radius, 12, 9), toon(color, { emissive: color, emissiveIntensity: 4 }), [0,0,0], [1,1,1], [0,0,0], false);
+    const ringMat = basic(color, .72);
+    const r1 = part(g, new THREE.TorusGeometry(radius * 1.35, radius * .11, 6, 20), ringMat, [0,0,0], [1,1,.55], [Math.PI/2,0,0], false);
+    const r2 = part(g, new THREE.TorusGeometry(radius * 1.72, radius * .08, 6, 20), basic(0xff6a7d,.48), [0,0,0], [1,.62,1], [0,0,Math.PI/2], false);
+    g.userData.core = core;
+    g.userData.rings = [r1,r2];
+    return g;
+  }
+
+  function createDoomModel() {
+    const g = new THREE.Group();
+    const fur = toon(0x111722);
+    const fur2 = toon(0x242b38);
+    const dark = toon(0x070a10);
+    const red = toon(0xff294f, { emissive: 0xff123c, emissiveIntensity: 2.8 });
+    const redDark = toon(0x6b1028, { emissive: 0x3a0012, emissiveIntensity: .8 });
+
+    const body = part(g, new THREE.SphereGeometry(.72, 12, 9), fur, [0,1.05,0], [.78,1.05,.72]);
+    const chest = part(g, new THREE.ConeGeometry(.45,.7,7), fur2, [0,.95,-.48], [1,1,.5], [Math.PI/2,0,0]);
+    const head = part(g, new THREE.SphereGeometry(.65, 14, 10), fur2, [0,1.95,-.03], [1.02,.92,.88]);
+    part(g, new THREE.SphereGeometry(.34,10,8), fur, [0,1.78,-.55], [1.2,.64,.62]);
+
+    const earGeo = new THREE.ConeGeometry(.38,1.35,6);
+    const leftEar = part(g, earGeo, fur, [-.48,2.78,0], [1,1,.72], [0,0,-.18]);
+    const rightEar = part(g, earGeo, fur, [.48,2.78,0], [1,1,.72], [0,0,.18]);
+    part(leftEar, new THREE.ConeGeometry(.21,.92,5), redDark, [0,-.04,-.12], [1,1,.45], [0,0,0], false);
+    part(rightEar, new THREE.ConeGeometry(.21,.92,5), redDark, [0,-.04,-.12], [1,1,.45], [0,0,0], false);
+    for (const ear of [leftEar,rightEar]) {
+      for (let i=0;i<3;i++) part(ear,new THREE.SphereGeometry(.055,6,5),red,[0,.12+i*.22,-.31],[1,.8,.45],[0,0,0],false);
+    }
+
+    for (const x of [-.23,.23]) {
+      const eye = part(g,new THREE.SphereGeometry(.13,10,7),red,[x,1.98,-.58],[1.35,.58,.45],[0,0,0],false);
+      eye.userData.glow = true;
+    }
+    for (const x of [-.19,0,.19]) {
+      part(g,new THREE.ConeGeometry(.055,.34,5),red,[x,2.28,-.57],[1,1,.4],[Math.PI,0,0],false);
+    }
+
+    const armL = part(g,new THREE.CapsuleGeometry(.12,.62,4,7),fur,[-.68,1.22,-.02],[1,1,1],[0,0,-.9]);
+    const armR = part(g,new THREE.CapsuleGeometry(.12,.62,4,7),fur,[.68,1.22,-.02],[1,1,1],[0,0,.9]);
+    const handL = part(g,new THREE.SphereGeometry(.19,8,6),fur2,[-.98,1.18,-.08]);
+    const handR = part(g,new THREE.SphereGeometry(.19,8,6),fur2,[.98,1.18,-.08]);
+    for (const hand of [handL,handR]) {
+      for (let i=-1;i<=1;i++) part(hand,new THREE.ConeGeometry(.045,.22,4),dark,[i*.08,-.02,-.16],[1,1,1],[Math.PI/2,0,0]);
+    }
+
+    const legL = part(g,new THREE.CapsuleGeometry(.15,.46,4,7),fur,[-.34,.38,0],[1,1,1],[0,0,-.08]);
+    const legR = part(g,new THREE.CapsuleGeometry(.15,.46,4,7),fur,[.34,.38,0],[1,1,1],[0,0,.08]);
+    part(g,new THREE.SphereGeometry(.24,8,6),fur2,[-.36,.07,-.13],[1.2,.48,1.45]);
+    part(g,new THREE.SphereGeometry(.24,8,6),fur2,[.36,.07,-.13],[1.2,.48,1.45]);
+
+    const tail = new THREE.Group();
+    tail.position.set(0,.86,.48); tail.rotation.x=-.6; g.add(tail);
+    part(tail,new THREE.ConeGeometry(.28,1.35,7),fur,[0,.45,0],[1,1,.9],[0,0,Math.PI]);
+    part(tail,new THREE.ConeGeometry(.18,.72,7),fur2,[0,1.1,0],[1,1,.9],[0,0,Math.PI]);
+
+    const orbL = makeMagicOrb(g,-1.28,1.43,-.08,.21);
+    const orbR = makeMagicOrb(g,1.28,1.43,-.08,.21);
+    g.userData.magicOrbs=[orbL,orbR];
+    g.userData.animated={armL,armR,tail};
+    g.userData.baseY=0;
+    return g;
+  }
+
+  function createShadowStalkerModel() {
+    const g = new THREE.Group();
+    const fur = toon(0x0c111a);
+    const fur2 = toon(0x202735);
+    const red = toon(0xff244c, { emissive: 0xff0a37, emissiveIntensity: 3.3 });
+    const dark = toon(0x05070b);
+
+    part(g,new THREE.SphereGeometry(1.0,14,10),fur,[0,1.55,0],[1.0,1.25,.88]);
+    part(g,new THREE.SphereGeometry(.82,14,10),fur2,[0,2.82,-.08],[1.05,.9,.9]);
+    const ruff = new THREE.Group(); ruff.position.set(0,2.2,0); g.add(ruff);
+    for(let i=0;i<9;i++){
+      const a=(i/9)*Math.PI*2;
+      const t=part(ruff,new THREE.ConeGeometry(.23,.72,5),fur2,[Math.cos(a)*.72,Math.sin(a)*.18,Math.sin(a)*.56],[1,1,.7],[Math.PI/2,0,-a]);
+      t.rotation.y=a;
+    }
+
+    const hornL = new THREE.Group(); hornL.position.set(-.63,3.28,.02); g.add(hornL);
+    const hornR = new THREE.Group(); hornR.position.set(.63,3.28,.02); hornR.scale.x=-1; g.add(hornR);
+    for(const h of [hornL,hornR]){
+      const seg1=part(h,new THREE.ConeGeometry(.28,1.15,6),fur2,[-.12,.38,0],[1,1,.8],[0,0,.52]);
+      part(h,new THREE.ConeGeometry(.21,.92,6),fur,[.24,1.0,0],[1,1,.72],[0,0,.9]);
+    }
+    for(const x of [-.43,-.16,.16,.43]) part(g,new THREE.ConeGeometry(.12,.62,5),red,[x,3.42,-.16],[1,1,.6],[0,0,x*.35],false);
+
+    for(const x of [-.31,.31]) part(g,new THREE.SphereGeometry(.16,10,7),red,[x,2.94,-.77],[1.55,.55,.42],[0,0,0],false);
+    const mouthY=2.62;
+    for(let i=0;i<7;i++){
+      const x=(i-3)*.16;
+      const up=part(g,new THREE.ConeGeometry(.06,.26,4),red,[x,mouthY,-.79],[1,1,.6],[Math.PI,0,0],false);
+      if(i<6) part(g,new THREE.ConeGeometry(.06,.24,4),red,[x+.08,mouthY-.20,-.79],[1,1,.6],[0,0,0],false);
+    }
+
+    const armL=part(g,new THREE.CapsuleGeometry(.24,1.0,4,8),fur,[-1.05,1.85,0],[1,1,1],[0,0,-.78]);
+    const armR=part(g,new THREE.CapsuleGeometry(.24,1.0,4,8),fur,[1.05,1.85,0],[1,1,1],[0,0,.78]);
+    const handL=part(g,new THREE.SphereGeometry(.35,9,7),fur2,[-1.55,2.28,-.08],[1,1,.9]);
+    const handR=part(g,new THREE.SphereGeometry(.35,9,7),fur2,[1.55,2.28,-.08],[1,1,.9]);
+    for(const hand of [handL,handR]) for(let i=-1;i<=1;i++) part(hand,new THREE.ConeGeometry(.07,.36,4),dark,[i*.13,.02,-.3],[1,1,1],[Math.PI/2,0,0]);
+
+    part(g,new THREE.CapsuleGeometry(.25,.72,4,8),fur,[-.52,.55,0],[1,1,1],[0,0,-.1]);
+    part(g,new THREE.CapsuleGeometry(.25,.72,4,8),fur,[.52,.55,0],[1,1,1],[0,0,.1]);
+    part(g,new THREE.SphereGeometry(.36,9,7),fur2,[-.54,.08,-.16],[1.35,.52,1.55]);
+    part(g,new THREE.SphereGeometry(.36,9,7),fur2,[.54,.08,-.16],[1.35,.52,1.55]);
+
+    const tail=new THREE.Group(); tail.position.set(0,1.15,.65); tail.rotation.x=-.7; g.add(tail);
+    part(tail,new THREE.ConeGeometry(.26,1.75,7),fur,[0,.64,0],[1,1,.9],[0,0,Math.PI]);
+    const arrow=part(tail,new THREE.ConeGeometry(.36,.7,3),red,[0,1.55,0],[1,1,.7],[0,0,Math.PI]);
+    arrow.rotation.y=Math.PI/2;
+
+    const orbL=makeMagicOrb(g,-1.65,3.75,-.1,.34);
+    const orbR=makeMagicOrb(g,1.65,3.75,-.1,.34);
+    g.userData.magicOrbs=[orbL,orbR];
+    g.userData.animated={armL,armR,tail};
+    g.userData.baseY=0;
+    return g;
+  }
+
+  function createGhastlyModel(scale=1) {
+    const g=new THREE.Group();
+    g.scale.setScalar(scale);
+    const smoke=toon(0x191724);
+    const smoke2=toon(0x292536);
+    const voidMat=toon(0x05060a);
+    const red=toon(0xff284f,{emissive:0xff0a38,emissiveIntensity:3.5});
+
+    part(g,new THREE.SphereGeometry(.62,12,9),smoke2,[0,1.72,0],[1.08,.9,.95]);
+    part(g,new THREE.ConeGeometry(.72,1.15,8),smoke,[0,2.05,.08],[1,1,.9],[0,0,Math.PI]);
+    part(g,new THREE.SphereGeometry(.47,11,8),voidMat,[0,1.7,-.42],[1,.76,.5]);
+    for(const x of [-.2,.2]) part(g,new THREE.SphereGeometry(.12,9,6),red,[x,1.78,-.76],[1.15,1.65,.45],[0,0,0],false);
+
+    const armL=new THREE.Group(); armL.position.set(-.58,1.25,0); armL.rotation.z=-.8; g.add(armL);
+    const armR=new THREE.Group(); armR.position.set(.58,1.25,0); armR.rotation.z=.8; g.add(armR);
+    for(const arm of [armL,armR]){
+      part(arm,new THREE.CapsuleGeometry(.12,.52,4,7),smoke,[0,.25,0]);
+      const hand=part(arm,new THREE.SphereGeometry(.2,8,6),smoke2,[0,.62,-.05]);
+      for(let i=-1;i<=1;i++) part(hand,new THREE.ConeGeometry(.04,.25,4),red,[i*.08,.02,-.18],[1,1,1],[Math.PI/2,0,0],false);
+    }
+    const tail=new THREE.Group(); tail.position.set(0,.95,.08); g.add(tail);
+    part(tail,new THREE.ConeGeometry(.5,1.4,8),smoke,[0,-.55,0],[1,1,.9],[0,0,0]);
+    part(tail,new THREE.SphereGeometry(.28,8,6),smoke2,[.15,-1.2,.05],[1.2,.65,.8]);
+    part(tail,new THREE.ConeGeometry(.22,.75,7),smoke,[.34,-1.55,.05],[1,1,.8],[0,0,-.7]);
+
+    const wisp=part(g,new THREE.ConeGeometry(.18,.62,6),smoke2,[.14,2.78,.05],[1,1,.75],[0,0,-.45]);
+    g.userData.animated={armL,armR,tail,wisp};
+    return g;
+  }
+
   const mats = {
     grass: standard(0x57a64a),
     grass2: standard(0x70bd50),
@@ -281,49 +458,8 @@
     flame.userData.flame = true;
   }
 
-  let atlasTexture = null;
-  const textureLoader = new THREE.TextureLoader();
-  textureLoader.load('assets/characters.svg', (tex) => {
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.magFilter = THREE.LinearFilter;
-    tex.minFilter = THREE.LinearFilter;
-    atlasTexture = tex;
-    startGame();
-  }, undefined, () => {
-    atlasTexture = makeFallbackAtlas();
-    startGame();
-  });
-
-  function makeFallbackAtlas() {
-    const c = document.createElement('canvas');
-    c.width = 768; c.height = 384;
-    const g = c.getContext('2d');
-    g.clearRect(0, 0, c.width, c.height);
-    const labels = [['DOOM', 128, 0], ['SHADOW', 384, 1], ['GHASTLY', 640, 2]];
-    labels.forEach(([name, x, type]) => {
-      g.save(); g.translate(x, 192);
-      g.fillStyle = type === 2 ? '#282534' : '#111522';
-      g.beginPath(); g.arc(0, 0, type === 1 ? 105 : 80, 0, Math.PI * 2); g.fill();
-      g.fillStyle = '#ff244c';
-      g.beginPath(); g.ellipse(-28, -20, 13, 8, 0, 0, Math.PI * 2); g.ellipse(28, -20, 13, 8, 0, 0, Math.PI * 2); g.fill();
-      g.font = 'bold 24px sans-serif'; g.textAlign = 'center'; g.fillText(name, 0, 130);
-      g.restore();
-    });
-    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
-  }
-
-  function atlasSlice(column) {
-    const t = atlasTexture.clone();
-    t.needsUpdate = true;
-    t.repeat.set(1 / 3, 1);
-    t.offset.set(column / 3, 0);
-    t.minFilter = THREE.LinearFilter;
-    return t;
-  }
-
-  let doomTex, shadowTex, ghastlyTex;
   let player;
-  let playerSprite;
+  let playerModel;
   let playerGlow;
   let hp = 120;
   let maxHp = 120;
@@ -350,9 +486,6 @@
   const MAX_PARTICLES = isTouch ? 85 : 140;
 
   function startGame() {
-    doomTex = atlasSlice(0);
-    shadowTex = atlasSlice(1);
-    ghastlyTex = atlasSlice(2);
     createPlayer();
     spawnInitialEnemies();
     updateHUD();
@@ -363,31 +496,17 @@
     animate();
   }
 
-  function makeSprite(texture, scaleX, scaleY, opacity = 1) {
-    const mat = new THREE.SpriteMaterial({ map: texture, transparent: true, alphaTest: .035, depthWrite: false, opacity });
-    const s = new THREE.Sprite(mat);
-    s.scale.set(scaleX, scaleY, 1);
-    return s;
-  }
-
   function createPlayer() {
     player = new THREE.Group();
-    player.position.set(0, .32, 10.8);
+    player.position.set(0, .3, 10.8);
     scene.add(player);
 
-    playerGlow = addMesh(new THREE.RingGeometry(.45, 1.12, 24), basic(0xff1b43, .16), player, false, false);
+    playerGlow = addMesh(new THREE.RingGeometry(.45, 1.1, 24), basic(0xff1b43, .17), player, false, false);
     playerGlow.rotation.x = -Math.PI / 2;
-    playerGlow.position.y = -.22;
+    playerGlow.position.y = -.15;
 
-    playerSprite = makeSprite(doomTex, 2.65, 3.1);
-    playerSprite.position.y = 1.28;
-    player.add(playerSprite);
-
-    for (const x of [-.72, .72]) {
-      const orb = addMesh(new THREE.SphereGeometry(.15, 10, 8), standard(0xff3154, { emissive: 0xff0a35, emissiveIntensity: 4.5, roughness: .25, flat: false }), player, false, false);
-      orb.position.set(x, 1.32, .18);
-      orb.userData.playerOrb = x;
-    }
+    playerModel = createDoomModel();
+    player.add(playerModel);
   }
 
   function spawnInitialEnemies() {
@@ -400,18 +519,18 @@
 
   function spawnGhastly(x, z, isBoss = false, phase = 0) {
     const g = new THREE.Group();
-    g.position.set(x, isBoss ? 1.1 : .75, z);
+    g.position.set(x, isBoss ? 1.0 : .72, z);
     scene.add(g);
-    const sprite = makeSprite(ghastlyTex, isBoss ? 5.5 : 2.55, isBoss ? 6.9 : 3.5);
-    sprite.position.y = isBoss ? 2.6 : 1.45;
-    g.add(sprite);
+
+    const model = createGhastlyModel(isBoss ? 1.75 : 1);
+    g.add(model);
 
     const aura = addMesh(new THREE.RingGeometry(isBoss ? .9 : .42, isBoss ? 2.0 : .95, 28), basic(0xff163f, isBoss ? .32 : .18), g, false, false);
     aura.rotation.x = -Math.PI / 2;
     aura.position.y = -.55;
 
     const bar = new THREE.Group();
-    bar.position.y = isBoss ? 6.2 : 3.25;
+    bar.position.y = isBoss ? 6.7 : 3.4;
     g.add(bar);
     addMesh(new THREE.PlaneGeometry(isBoss ? 2.8 : 1.45, .18), basic(0x17191f, .94), bar, false, false);
     const fill = addMesh(new THREE.PlaneGeometry(isBoss ? 2.65 : 1.34, .11), basic(0xff294f, 1), bar, false, false);
@@ -424,7 +543,7 @@
       hp: isBoss ? 24 : 2,
       maxHp: isBoss ? 24 : 2,
       speed: isBoss ? 1.2 : 1.15 + rand() * .38,
-      sprite, aura, bar, fill,
+      model, aura, bar, fill,
       phase,
       hitTimer: 0,
       attackTimer: 1 + rand() * 1.5,
@@ -607,14 +726,13 @@
     evolved = true;
     maxHp = 160;
     hp = Math.min(maxHp, hp + 70);
-    playerSprite.material.map = shadowTex;
-    playerSprite.scale.set(3.8, 4.9, 1);
-    playerSprite.position.y = 1.95;
-    playerGlow.scale.setScalar(1.45);
-    player.children.filter(c => c.userData.playerOrb).forEach((o) => {
-      o.scale.setScalar(1.75);
-      o.position.set(o.userData.playerOrb * 1.4, 2.45, .2);
-    });
+
+    const old = playerModel;
+    player.remove(old);
+    playerModel = createShadowStalkerModel();
+    player.add(playerModel);
+    playerGlow.scale.setScalar(1.5);
+
     ui.formName.textContent = 'SHADOW STALKER';
     ui.specialBtn.classList.remove('hidden');
     ui.objectiveTitle.textContent = 'The Shadow Gate is open!';
@@ -623,7 +741,7 @@
     ui.evolveBanner.classList.remove('hidden');
     setTimeout(() => ui.evolveBanner.classList.add('hidden'), 1900);
     portalPower = .75;
-    for (let n = 0; n < 4; n++) setTimeout(() => burstFX(player.position.clone().add(new THREE.Vector3(0, 1, 0)), 0xff153f, isTouch ? 28 : 40, 8), n * 150);
+    for (let n = 0; n < 4; n++) setTimeout(() => burstFX(player.position.clone().add(new THREE.Vector3(0, 1.4, 0)), 0xff153f, isTouch ? 28 : 40, 8), n * 150);
     sfx('evolve');
     setTimeout(spawnBoss, 1500);
   }
@@ -722,13 +840,23 @@
     } else {
       playerBob += dt * 3.1;
     }
-    const bob = Math.sin(playerBob) * (move.lengthSq() > .01 ? .07 : .035);
-    playerSprite.position.y = (evolved ? 1.95 : 1.28) + bob;
+    const bob = Math.sin(playerBob) * (move.lengthSq() > .01 ? .08 : .035);
+    playerModel.position.y = bob;
+    if (move.lengthSq() > .001) playerModel.rotation.y = Math.atan2(-move.x, -move.z);
     playerGlow.material.opacity = (evolved ? .24 : .14) + Math.sin(elapsed * 5) * .04;
     player.visible = invulnerable <= 0 || Math.floor(invulnerable * 16) % 2 === 0;
-    for (const c of player.children) if (c.userData.playerOrb) {
-      const base = evolved ? 1.75 : 1;
-      c.scale.setScalar(base * (1 + Math.sin(elapsed * 8 + c.userData.playerOrb) * .08));
+
+    const anim = playerModel.userData.animated;
+    if (anim) {
+      const stride = Math.sin(playerBob * 1.2) * (move.lengthSq() > .01 ? .18 : .05);
+      anim.armL.rotation.z += (-.9 - stride - anim.armL.rotation.z) * .18;
+      anim.armR.rotation.z += (.9 + stride - anim.armR.rotation.z) * .18;
+      anim.tail.rotation.z = Math.sin(elapsed * 4.4) * .12;
+    }
+    for (const o of playerModel.userData.magicOrbs || []) {
+      const pulse = 1 + Math.sin(elapsed * 7 + o.position.x) * .08;
+      o.scale.setScalar(pulse);
+      for (const r of o.userData.rings || []) r.rotation.z += dt * (r === o.userData.rings[0] ? 2.1 : -1.6);
     }
 
     updateProjectiles(dt);
@@ -799,7 +927,16 @@
 
       const floatBase = ud.boss ? 1.1 : .72;
       e.position.y = floatBase + Math.sin(elapsed * 2.2 + ud.phase) * (ud.boss ? .2 : .27);
-      ud.sprite.material.opacity = ud.hitTimer > 0 ? .58 : 1;
+      ud.model.rotation.y = Math.atan2(-toPlayer.x, -toPlayer.z);
+      const ghAnim = ud.model.userData.animated;
+      if (ghAnim) {
+        ghAnim.armL.rotation.z = -.8 + Math.sin(elapsed * 3 + ud.phase) * .16;
+        ghAnim.armR.rotation.z = .8 - Math.sin(elapsed * 3 + ud.phase) * .16;
+        ghAnim.tail.rotation.z = Math.sin(elapsed * 2.1 + ud.phase) * .12;
+        ghAnim.wisp.rotation.z = -.45 + Math.sin(elapsed * 2.8 + ud.phase) * .2;
+      }
+      const hitPulse = ud.hitTimer > 0 ? 1.1 : 1;
+      ud.model.scale.setScalar((ud.boss ? 1 : 1) * hitPulse);
       ud.aura.rotation.z += dt * (ud.boss ? 1.3 : .65);
       ud.aura.material.opacity = (ud.boss ? .28 : .15) + Math.sin(elapsed * 4 + ud.phase) * .05;
       ud.bar.quaternion.copy(camera.quaternion);
@@ -889,4 +1026,6 @@
   addEventListener('resize', resize);
   window.visualViewport?.addEventListener('resize', resize);
   document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  startGame();
 })();
