@@ -1,0 +1,31 @@
+name: Publish to itch.io
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build upload folder
+        run: |
+          mkdir build
+          cp index.html styles.css game.js build/
+      - name: Download Butler
+        run: |
+          curl -L -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip -q butler.zip -d butler
+          chmod +x butler/butler
+      - name: Upload HTML5 build
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+          ITCH_USER: ${{ vars.ITCH_USER }}
+          ITCH_GAME: ${{ vars.ITCH_GAME }}
+        run: |
+          test -n "$BUTLER_API_KEY" || (echo "Missing BUTLER_API_KEY secret" && exit 1)
+          test -n "$ITCH_USER" || (echo "Missing ITCH_USER variable" && exit 1)
+          test -n "$ITCH_GAME" || (echo "Missing ITCH_GAME variable" && exit 1)
+          ./butler/butler push build "$ITCH_USER/$ITCH_GAME:html5"
