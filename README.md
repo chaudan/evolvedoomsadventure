@@ -1,39 +1,63 @@
 # Doom's Adventure
 
-A kid-friendly 3D browser adventure starring **Doom**, who evolves into **Shadow Stalker** while battling ghostly enemies called **Ghastlies**.
+A kid-friendly 3D browser action-adventure starring **Doom**, who evolves into **Shadow Stalker** while battling ghost enemies called **Ghastlies**.
 
-## Play
-Open `index.html` through a local web server, or deploy the repository as a static site.
+This prototype is built around the original Doom / Shadow Stalker character art and uses a stylized 2.5D character treatment inside a colorful 3D island world so the playable game stays visually close to the reference artwork.
+
+## Current playable prototype
+
+- Third-person 3D island level with a clear path to the Shadow Gate
+- Doom character art with giant ears, glowing red markings, red eyes, and magic orbs
+- Ghost-like Ghastlies with the same black/red visual language
+- Eight Ghastlies to defeat and eight Shadow Energy pickups to collect
+- Doom evolves into the larger **Shadow Stalker** form
+- Shadow Stalker gains a close-range **Shadow Burst**
+- Ancient Ghastly boss fight at the Shadow Gate
+- Auto-aimed orb attacks to make the game friendlier for kids
+- Touch-first iPad controls plus keyboard controls
+- Responsive HUD, iPad safe-area support, and landscape orientation guidance
+- Reduced render resolution and particle budget on touch devices for smoother iPad performance
+- Procedural sound effects; no sound files required
+
+## Play locally
+
+Download or clone the repository and **double-click `index.html`**.
+
+Three.js is bundled under `vendor/`, so this build no longer needs an internet connection to start locally.
+
+For iPad, the easiest way to play is the itch.io HTML5 build in Safari. Landscape orientation is recommended.
 
 ## Controls
+
+### iPad / touch
+- Left virtual joystick — move
+- Large red **ORB** button — fire at the nearest Ghastly
+- **DASH** — quick burst of speed and brief invulnerability
+- **BURST** — unlocked after evolving into Shadow Stalker
+
+### Keyboard
 - **WASD / Arrow keys** — move
-- **Space** — fire a Doom Orb
+- **Space** — Doom Orb
 - **Shift** — dash
-- **E** — Shadow Burst (after evolving)
+- **E** — Shadow Burst after evolving
 - **R** — restart after winning or losing
-- Touch controls appear automatically on phones and tablets.
 
 ## Goal
-Defeat 8 Ghastlies, collect their red shadow energy, evolve into Shadow Stalker, then defeat the Ancient Ghastly at the ruined gate.
+
+Defeat the eight Ghastlies and collect their Shadow Energy. At 8/8, Doom evolves into Shadow Stalker and the Shadow Gate awakens. Defeat the Ancient Ghastly to save the island.
 
 ## itch.io build
-Every push to `main` creates an `evolvedoomsadventure-html5.zip` artifact in GitHub Actions. It contains `index.html` at the root and is ready for itch.io's HTML5 uploader.
 
-The game loads Three.js from jsDelivr, so an internet connection is still required when launching it locally. No local web server is required.
+Every push to `main` creates an `evolvedoomsadventure-html5.zip` artifact in GitHub Actions. The zip contains `index.html`, the character assets, and the bundled Three.js runtime.
 
-## Automatic itch.io publishing
-The repository also includes a manual GitHub Action called **Publish to itch.io**.
+The repository also includes a manual **Publish to itch.io** workflow. Configure these GitHub repository settings first:
 
-Before using it:
-1. Create an itch.io project for the game.
-2. In GitHub, add repository variables:
-   - `ITCH_USER` = your itch.io username
-   - `ITCH_GAME` = the itch.io game slug
-3. Add a repository secret:
-   - `BUTLER_API_KEY` = your itch.io API key
-4. Run **Actions → Publish to itch.io → Run workflow**.
+- Variable `ITCH_USER` — itch.io username
+- Variable `ITCH_GAME` — itch.io game slug
+- Secret `BUTLER_API_KEY` — itch.io API key
 
-The workflow uploads the browser build to the `html5` channel.
+Then run **Actions → Publish to itch.io → Run workflow**.
 
-## Character
-Doom and Shadow Stalker are original characters created by the developer's child.
+## Art direction
+
+The target is a bright, polished, family-friendly fantasy adventure with dark charcoal characters, strong silhouettes, and vivid red shadow magic. The current characters are scalable SVG game sprites based directly on the Doom / Shadow Stalker reference design; they can later be swapped for full animated 3D models without changing the gameplay layer.
