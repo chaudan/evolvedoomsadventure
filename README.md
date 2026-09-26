@@ -12,7 +12,11 @@ This prototype is built around the original Doom / Shadow Stalker character art.
 - Fully 3D **grey** hooded Ghastlies with smoky tails, claws, glowing eyes, and floating animation so they read clearly apart from Doom and Shadow Stalker
 - Five enemy classes introduced over the campaign: **Drifter** (Level 1), **Charger** (10), **Brute** (20), **Hexer** (30), and **Reaper** (40)
 - Later Ghastlies have more health and new behaviours: charges, heavy melee attacks, ranged magic, and faster elite movement
-- **50 playable levels** with gradually larger and tougher Ghastly waves
+- **50 playable adventure levels**: each starts at a different edge of the island and ends by reaching an exit portal
+- Ghastlies continuously respawn while Doom explores, so fighting helps but clearing every enemy is no longer the goal
+- Exploration objectives rotate between finding lost relics, awakening rune stones, discovering forgotten landmarks, and finding a portal key
+- Optional treasure chests are hidden away from the direct route and restore health
+- **Boss battles every 10 levels**; defeating the boss unlocks that level's portal
 - Doom remains Doom through Levels 1–29 and evolves into **Shadow Stalker at Level 30**
 - Shadow Stalker gains a close-range **Shadow Burst**
 - Ancient Ghastly boss fight at the Shadow Gate
@@ -47,7 +51,7 @@ For iPad, the easiest way to play is the itch.io HTML5 build in Safari. Landscap
 
 ## Goal
 
-Fight through all **50 levels**. New Ghastly types appear every ten levels and the atmosphere changes as Doom approaches the Shadow Gate. Doom evolves into **Shadow Stalker when Level 30 begins**. Level 50 is the final battle against the **Ancient Ghastly** and its guardians.
+Travel through all **50 levels** by exploring each area, completing its adventure objective, and then reaching the newly opened portal. Ghastlies keep appearing while Doom explores, so the player can choose when to fight and when to keep moving. Every **10th level is a boss adventure**: defeat the Ancient Ghastly to unlock the portal. Doom evolves into **Shadow Stalker when Level 30 begins**. Level 50 ends after the final boss is defeated and Shadow Stalker crosses the last portal.
 
 ## itch.io build
 
