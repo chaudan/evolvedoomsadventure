@@ -14,8 +14,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Package HTML5 build
         run: |
-          mkdir build
+          mkdir -p build
           cp index.html styles.css game.js build/
+          cp -R assets vendor build/
           cd build
           zip -r ../evolvedoomsadventure-html5.zip .
       - uses: actions/upload-artifact@v4
