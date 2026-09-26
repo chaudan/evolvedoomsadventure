@@ -543,7 +543,7 @@
       hp: isBoss ? 24 : 2,
       maxHp: isBoss ? 24 : 2,
       speed: isBoss ? 1.2 : 1.15 + rand() * .38,
-      model, aura, bar, fill,
+      model, modelScale: isBoss ? 1.75 : 1, aura, bar, fill,
       phase,
       hitTimer: 0,
       attackTimer: 1 + rand() * 1.5,
@@ -936,7 +936,7 @@
         ghAnim.wisp.rotation.z = -.45 + Math.sin(elapsed * 2.8 + ud.phase) * .2;
       }
       const hitPulse = ud.hitTimer > 0 ? 1.1 : 1;
-      ud.model.scale.setScalar((ud.boss ? 1 : 1) * hitPulse);
+      ud.model.scale.setScalar(ud.modelScale * hitPulse);
       ud.aura.rotation.z += dt * (ud.boss ? 1.3 : .65);
       ud.aura.material.opacity = (ud.boss ? .28 : .15) + Math.sin(elapsed * 4 + ud.phase) * .05;
       ud.bar.quaternion.copy(camera.quaternion);
