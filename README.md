@@ -11,14 +11,29 @@ Open `index.html` through a local web server, or deploy the repository as a stat
 - **Shift** — dash
 - **E** — Shadow Burst (after evolving)
 - **R** — restart after winning or losing
+- Touch controls appear automatically on phones and tablets.
 
 ## Goal
-Defeat Ghastlies, collect their red energy, evolve into Shadow Stalker, then defeat the giant Ghastly at the ruined gate.
+Defeat 8 Ghastlies, collect their red shadow energy, evolve into Shadow Stalker, then defeat the Ancient Ghastly at the ruined gate.
 
-## itch.io
-The game is plain HTML/CSS/JavaScript and can be uploaded as an HTML5 game. Zip the repository contents so `index.html` is at the root of the zip, then upload it to itch.io and choose **This file will be played in the browser**.
+## itch.io build
+Every push to `main` creates an `evolvedoomsadventure-html5.zip` artifact in GitHub Actions. It contains `index.html` at the root and is ready for itch.io's HTML5 uploader.
 
-The game uses Three.js from jsDelivr, so the player needs an internet connection when launching the game.
+The game currently loads Three.js from jsDelivr, so the player needs an internet connection when launching it.
+
+## Automatic itch.io publishing
+The repository also includes a manual GitHub Action called **Publish to itch.io**.
+
+Before using it:
+1. Create an itch.io project for the game.
+2. In GitHub, add repository variables:
+   - `ITCH_USER` = your itch.io username
+   - `ITCH_GAME` = the itch.io game slug
+3. Add a repository secret:
+   - `BUTLER_API_KEY` = your itch.io API key
+4. Run **Actions → Publish to itch.io → Run workflow**.
+
+The workflow uploads the browser build to the `html5` channel.
 
 ## Character
 Doom and Shadow Stalker are original characters created by the developer's child.
