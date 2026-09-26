@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Doom's Adventure</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="game"></div>
+
+  <div id="hud">
+    <div class="panel left">
+      <div class="name" id="formName">DOOM</div>
+      <div class="bar"><div id="healthBar" class="fill health"></div></div>
+      <div class="small">HEALTH <span id="healthText">100 / 100</span></div>
+    </div>
+    <div class="panel right">
+      <div class="small">SHADOW ENERGY</div>
+      <div class="bar"><div id="energyBar" class="fill energy"></div></div>
+      <div class="small"><span id="energyText">0 / 8</span></div>
+    </div>
+  </div>
+
+  <div id="objective">Defeat Ghastlies and collect their shadow energy!</div>
+  <div id="bossBanner" class="hidden">THE ANCIENT GHASTLY AWAKENS!</div>
+  <div id="message" class="hidden"></div>
+
+  <div id="controls">
+    <span>Move: WASD / Arrows</span>
+    <span>Attack: Space</span>
+    <span>Dash: Shift</span>
+    <span id="specialHint" class="hidden">Shadow Burst: E</span>
+  </div>
+
+  <div id="touchControls">
+    <div class="dpad">
+      <button data-key="ArrowUp">▲</button>
+      <div>
+        <button data-key="ArrowLeft">◀</button>
+        <button data-key="ArrowDown">▼</button>
+        <button data-key="ArrowRight">▶</button>
+      </div>
+    </div>
+    <div class="actions">
+      <button data-key="Space" class="attackBtn">ORB</button>
+      <button data-key="ShiftLeft">DASH</button>
+      <button data-key="KeyE" id="touchSpecial" class="hidden">BURST</button>
+    </div>
+  </div>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>
