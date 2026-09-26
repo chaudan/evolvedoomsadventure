@@ -4,10 +4,11 @@
   --red:#ff264d;--red-hot:#ff4766;--ink:#11151f;--panel:rgba(13,16,25,.86);--edge:rgba(255,255,255,.18);--purple:#a73cff
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111827;overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none}
-body{position:fixed;inset:0}
-#game{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
-canvas{display:block;width:100%;height:100%;touch-action:none}
+html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;background:#111827;overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-text-size-adjust:100%}
+html{position:fixed;inset:0}
+body{position:fixed;inset:0;width:100vw;height:100dvh;max-height:100dvh;overflow:hidden;overscroll-behavior:none;-webkit-overflow-scrolling:auto}
+#game{position:fixed;inset:0;width:100vw;height:100dvh;overflow:hidden;touch-action:none;overscroll-behavior:none}
+canvas{display:block;width:100%;height:100%;touch-action:none;overscroll-behavior:none}
 .hidden{display:none!important}
 #hud{position:absolute;z-index:10;top:max(12px,env(safe-area-inset-top));left:max(14px,env(safe-area-inset-left));right:max(14px,env(safe-area-inset-right));display:flex;justify-content:space-between;align-items:flex-start;gap:16px;pointer-events:none}
 .hud-card{display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,rgba(28,32,44,.94),rgba(8,10,16,.88));border:2px solid rgba(255,255,255,.23);box-shadow:0 3px 0 rgba(0,0,0,.4),inset 0 0 0 2px rgba(0,0,0,.25);border-radius:18px;padding:7px 11px;color:#fff;text-shadow:0 2px 2px #000;min-height:64px}
@@ -23,7 +24,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .boss-hud{position:absolute;z-index:11;top:max(14px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(460px,42vw);pointer-events:none}.boss-name{text-align:center;font-size:13px;font-weight:1000;letter-spacing:.16em;color:#ffd5dc;text-shadow:0 2px 4px #000}.boss-bar{height:15px;border-radius:999px;background:#14151a;border:2px solid rgba(255,255,255,.2);overflow:hidden;box-shadow:0 2px 7px #000}.boss-fill{width:100%;height:100%;background:linear-gradient(90deg,#8c0e35,#ff224f,#ff694e);transition:width .16s}
 .toast,.evolve-banner{position:absolute;z-index:20;left:50%;transform:translateX(-50%);pointer-events:none;text-align:center;color:#fff;font-weight:1000;text-shadow:0 3px 12px #000}.toast{top:37%;font-size:clamp(25px,5vw,60px);white-space:pre-line}.evolve-banner{top:24%;font-size:clamp(30px,6vw,72px);letter-spacing:.05em;color:#fff4f6;-webkit-text-stroke:2px #6b001c;filter:drop-shadow(0 0 18px #ff143f)}
 .desktop-help{position:absolute;z-index:10;bottom:12px;left:50%;transform:translateX(-50%);padding:7px 13px;border-radius:999px;background:rgba(9,11,17,.7);border:1px solid rgba(255,255,255,.13);font-size:11px;color:#eef1f7;pointer-events:none;white-space:nowrap}
-#touchControls{display:none;position:absolute;z-index:30;left:max(18px,env(safe-area-inset-left));right:max(18px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));align-items:flex-end;justify-content:space-between;pointer-events:none}
+#touchControls{display:none;position:fixed;z-index:30;left:max(18px,env(safe-area-inset-left));right:max(18px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));align-items:flex-end;justify-content:space-between;pointer-events:none;touch-action:none;overscroll-behavior:none}
 .joystick{width:156px;height:156px;position:relative;pointer-events:auto;touch-action:none}.joystick-ring{position:absolute;inset:0;border-radius:50%;border:3px solid rgba(255,255,255,.72);background:radial-gradient(circle,rgba(255,255,255,.16) 0 37%,rgba(10,13,19,.34) 39% 100%);box-shadow:0 3px 10px rgba(0,0,0,.25)}.joystick-ring:before,.joystick-ring:after{content:"";position:absolute;left:50%;top:50%;background:rgba(255,255,255,.28);transform:translate(-50%,-50%)}.joystick-ring:before{width:2px;height:78%}.joystick-ring:after{height:2px;width:78%}.joystick-knob{position:absolute;width:72px;height:72px;left:42px;top:42px;border-radius:50%;border:2px solid rgba(255,255,255,.9);background:rgba(242,244,247,.55);box-shadow:0 3px 12px rgba(0,0,0,.28);transform:translate(0,0)}
 .action-stack{display:flex;align-items:flex-end;gap:10px;pointer-events:none}.action-button{pointer-events:auto;touch-action:none;border:3px solid rgba(255,255,255,.82);outline:2px solid rgba(0,0,0,.45);color:#fff;border-radius:50%;font-weight:1000;text-shadow:0 2px 3px #000;box-shadow:0 4px 12px rgba(0,0,0,.35),inset 0 0 20px rgba(255,255,255,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}.action-button:active,.action-button.pressed{transform:scale(.94);filter:brightness(1.25)}.action-button small{font-size:9px;letter-spacing:.08em}.attack-button{width:104px;height:104px;background:radial-gradient(circle,#ff5b70 0 16%,#e01643 42%,#5c071e 72%,#13161e 75%)}.dash-button{width:78px;height:78px;background:linear-gradient(145deg,#474e5c,#181c25);font-size:28px;margin-bottom:4px}.special-button{width:72px;height:72px;background:radial-gradient(circle,#cc4fff,#6d21d3 45%,#24102f 72%);font-size:24px;margin-bottom:34px}.orb-icon{width:45px;height:45px;border-radius:50%;background:repeating-radial-gradient(ellipse at 55% 48%,#ffd4db 0 4px,#ff4766 5px 9px,#ae052c 10px 14px);box-shadow:0 0 13px #ff244d}.dash-button span{transform:rotate(180deg)}
 .restart{position:absolute;z-index:50;left:50%;top:57%;transform:translate(-50%,-50%);border:2px solid #fff;border-radius:14px;background:#e51f47;color:#fff;font-weight:1000;font-size:18px;padding:13px 24px;box-shadow:0 7px 20px rgba(0,0,0,.4)}
@@ -43,3 +44,10 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .level-badge span{display:block;font-size:9px;font-weight:900;letter-spacing:.14em;color:#f6c968;line-height:1.1}.level-badge strong{display:block;font-size:16px;letter-spacing:.05em;margin-top:2px}
 .boss-hud{top:max(72px,calc(env(safe-area-inset-top) + 64px))}
 @media (pointer:coarse),(max-width:900px){.level-badge{min-width:126px;padding:5px 9px}.level-badge span{font-size:8px}.level-badge strong{font-size:14px}.boss-hud{top:max(64px,calc(env(safe-area-inset-top) + 56px))}}
+
+#touchControls,#touchControls *,.joystick,.joystick *, .action-button{
+  touch-action:none!important;
+  overscroll-behavior:none!important;
+  -webkit-user-select:none!important;
+  user-select:none!important;
+}
