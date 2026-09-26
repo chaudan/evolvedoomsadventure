@@ -72,6 +72,8 @@
 
   const root = new THREE.Group();
   scene.add(root);
+  const adventureLayer = new THREE.Group();
+  scene.add(adventureLayer);
 
   const rand = mulberry32(7741);
   function mulberry32(a) {
@@ -521,6 +523,12 @@
   let bossSpawned = false;
   let levelTransition = false;
   let levelStartedAt = 0;
+  let levelObjective = null;
+  let exitPortal = null;
+  let portalOpen = false;
+  let enemySpawnTimer = 0;
+  let treasureFound = false;
+  const levelItems = [];
   let attackCooldown = 0;
   let dashCooldown = 0;
   let dashTimer = 0;
@@ -564,7 +572,21 @@
   const LEVEL_SPAWNS=[
     [-5.8,5.4],[5.4,3.4],[-6.5,-1.5],[5.8,-3.7],[-4.4,-8.4],
     [5.0,-10.2],[-6.3,-13.4],[5.5,-14.8],[-9.2,-5.7],[9.0,-7.1],
-    [-8.0,1.6],[8.2,-.2]
+    [-8.0,1.6],[8.2,-.2],[-13,8],[13,8],[-13,-8],[13,-8]
+  ];
+
+  const LEVEL_ROUTES=[
+    {start:[0,15],exit:[0,-15]},
+    {start:[-15,8],exit:[15,-8]},
+    {start:[15,8],exit:[-15,-8]},
+    {start:[-15,-7],exit:[15,7]},
+    {start:[11,14],exit:[-12,-14]},
+    {start:[-11,14],exit:[12,-14]}
+  ];
+
+  const ADVENTURE_POINTS=[
+    [-12,11],[12,11],[-14,3],[14,3],[-11,-5],[11,-5],[-8,-13],[8,-13],
+    [0,7],[-6,3],[6,-2],[0,-9],[-15,-1],[15,-1],[-3,-14],[3,13]
   ];
 
   function chapterForLevel(level){
@@ -596,56 +618,283 @@
     return ({10:'charger',20:'brute',30:'hexer',40:'reaper'})[level]||null;
   }
 
+  function isBossLevel(level){ return level % 10 === 0; }
+
+  function routeForLevel(level){
+    return LEVEL_ROUTES[(level-1)%LEVEL_ROUTES.length];
+  }
+
   function startLevel(level){
     currentLevel=level;
     levelTransition=true;
     levelStartedAt=elapsed;
     bossSpawned=false;
     boss=null;
+    portalOpen=false;
+    treasureFound=false;
+    enemySpawnTimer=.35;
     ui.bossHud.classList.add('hidden');
-    player.position.set(0,.3,10.8);
     clearCombatObjects();
+    clearAdventureLayer();
     setChapterTheme(level);
+
+    const route=routeForLevel(level);
+    player.position.set(route.start[0],.3,route.start[1]);
+    setupLevelScenery(level,route);
+    createExitPortal(route.exit[0],route.exit[1]);
+    setupLevelObjective(level);
     updateHUD();
 
-    const beginWave=()=>{
-      spawnLevelWave(level);
+    const beginLevel=()=>{
       levelStartedAt=elapsed;
       levelTransition=false;
-      ui.objectiveTitle.textContent = level===50 ? 'Final Level: Ancient Ghastly' : `Level ${level}: Defeat the Ghastlies`;
-      ui.objectiveText.textContent = level===50 ? 'Defeat the Ancient Ghastly and its guardians!' : `${enemies.length} Ghastlies are haunting this area.`;
+      spawnInitialPatrol(level);
+      if(isBossLevel(level)) spawnBossForLevel(level);
+      updateObjectiveUI();
       const intro=newTypeAt(level);
-      if(intro) showToast(`NEW GHASTLY: ${GHASTLY_TYPES[intro].name.toUpperCase()}!`,1300);
-      else if(level>1 && level<TOTAL_LEVELS) showToast(`LEVEL ${level}`,700);
+      if(intro && level!==10) showToast(`NEW GHASTLY: ${GHASTLY_TYPES[intro].name.toUpperCase()}!`,1300);
+      else if(level>1) showToast(isBossLevel(level)?`BOSS LEVEL ${level}`:`LEVEL ${level}`,850);
     };
 
     if(level===EVOLVE_LEVEL && !evolved){
       evolve();
-      setTimeout(beginWave,1450);
+      setTimeout(beginLevel,1450);
     }else{
-      beginWave();
+      beginLevel();
     }
   }
 
-  function spawnLevelWave(level){
-    if(level===TOTAL_LEVELS){
-      spawnBoss();
-      ['reaper','reaper','hexer','brute'].forEach((type,i)=>{
-        const p=LEVEL_SPAWNS[(i*2+3)%LEVEL_SPAWNS.length];
-        spawnGhastly(p[0],p[1],type,i*.7);
+  function clearAdventureLayer(){
+    while(adventureLayer.children.length){
+      const child=adventureLayer.children.pop();
+      child.traverse?.(o=>{
+        if(o.geometry) o.geometry.dispose?.();
+        if(o.material && !Array.isArray(o.material)) o.material.dispose?.();
       });
-      return;
+    }
+    levelItems.length=0;
+    exitPortal=null;
+    levelObjective=null;
+  }
+
+  function setupLevelScenery(level,route){
+    const chapter=Math.floor((level-1)/10);
+    const ruinCount=4+Math.min(7,chapter+Math.floor(level/8));
+    for(let i=0;i<ruinCount;i++){
+      const p=ADVENTURE_POINTS[(i*3+level)%ADVENTURE_POINTS.length];
+      if(Math.hypot(p[0]-route.start[0],p[1]-route.start[1])<4) continue;
+      if(Math.hypot(p[0]-route.exit[0],p[1]-route.exit[1])<4) continue;
+      const g=new THREE.Group();
+      g.position.set(p[0]+((i%2)*1.1-.55),0.28,p[1]);
+      g.rotation.y=((i*1.37+level*.29)%6.28);
+      adventureLayer.add(g);
+      part(g,new THREE.BoxGeometry(1.2+((i+level)%3)*.35,.45,1.0),i%2?mats.ruin:mats.ruinDark,[0,.12,0],[1,1,1],[0,0,0]);
+      if(i%3===0){
+        part(g,new THREE.BoxGeometry(.55,2.4+chapter*.18,.55),mats.ruin,[0,1.35,0]);
+        part(g,new THREE.ConeGeometry(.45,.7,5),mats.ruinDark,[0,2.85+chapter*.18,0]);
+      }else{
+        const rock=part(g,new THREE.DodecahedronGeometry(.65,0),i%2?mats.rock:mats.rockDark,[0,.65,0],[1.3,.85,1]);
+        rock.rotation.y=i;
+      }
     }
 
-    let count=Math.min(10,3+Math.floor((level-1)/5));
-    if(level%10===0) count=Math.min(10,count+1);
-    const pool=poolForLevel(level);
-    const guaranteed=newTypeAt(level);
-    for(let i=0;i<count;i++){
-      const type=(i===0&&guaranteed)?guaranteed:pool[(i+level)%pool.length];
-      const p=LEVEL_SPAWNS[(i*3+level)%LEVEL_SPAWNS.length];
-      spawnGhastly(p[0],p[1],type,i*.61);
+    const sx=route.start[0], sz=route.start[1], ex=route.exit[0], ez=route.exit[1];
+    for(let i=1;i<=5;i++){
+      const t=i/6;
+      const marker=new THREE.Group();
+      marker.position.set(THREE.MathUtils.lerp(sx,ex,t)+Math.sin(level+i)*1.4,.25,THREE.MathUtils.lerp(sz,ez,t)+Math.cos(level*.6+i)*1.2);
+      adventureLayer.add(marker);
+      part(marker,new THREE.CylinderGeometry(.22,.3,.7,6),mats.wood,[0,.35,0]);
+      const crystal=part(marker,new THREE.OctahedronGeometry(.18,0),standard(0x6cd8ff,{emissive:0x287db8,emissiveIntensity:1.7}),[0,.95,0],[1,.9,1],[0,0,0],false);
+      crystal.userData.pathMarker=true;
     }
+
+    createTreasure(level,route);
+  }
+
+  function createTreasure(level,route){
+    const p=ADVENTURE_POINTS[(level*5+7)%ADVENTURE_POINTS.length];
+    if(Math.hypot(p[0]-route.start[0],p[1]-route.start[1])<4) return;
+    const chest=new THREE.Group();
+    chest.position.set(p[0],.35,p[1]);
+    adventureLayer.add(chest);
+    part(chest,new THREE.BoxGeometry(1.1,.6,.75),mats.wood,[0,.3,0]);
+    part(chest,new THREE.BoxGeometry(1.14,.2,.79),mats.gold,[0,.66,0]);
+    const gem=part(chest,new THREE.OctahedronGeometry(.16,0),standard(0xffc34d,{emissive:0xff9a1e,emissiveIntensity:2.4}),[0,1.0,0],[1,1,1],[0,0,0],false);
+    levelItems.push({kind:'treasure',group:chest,gem,done:false});
+  }
+
+  function createExitPortal(x,z){
+    const g=new THREE.Group();
+    g.position.set(x,.45,z);
+    adventureLayer.add(g);
+    part(g,new THREE.CylinderGeometry(1.25,1.45,.28,16),mats.ruinDark,[0,.05,0]);
+    part(g,new THREE.BoxGeometry(.42,3.2,.5),mats.ruin,[-1.05,1.7,0]);
+    part(g,new THREE.BoxGeometry(.42,3.2,.5),mats.ruin,[1.05,1.7,0]);
+    part(g,new THREE.BoxGeometry(2.5,.42,.5),mats.ruin,[0,3.18,0]);
+    const disc=part(g,new THREE.CircleGeometry(.94,32),basic(0x59616a,.34),[0,1.72,.03],[1,1,1],[0,0,0],false);
+    const ring1=part(g,new THREE.TorusGeometry(1.0,.085,7,28),basic(0x9aa5ad,.58),[0,1.72,.06],[1,1,1],[0,0,0],false);
+    const ring2=part(g,new THREE.TorusGeometry(.72,.055,6,24),basic(0x737d86,.45),[0,1.72,.08],[1,.82,1],[0,0,.5],false);
+    const beacon=part(g,new THREE.ConeGeometry(.35,.9,6),standard(0x9099a2,{emissive:0x303941,emissiveIntensity:.5}),[0,3.95,0],[1,1,1],[0,0,0],false);
+    g.userData={disc,ring1,ring2,beacon};
+    exitPortal=g;
+    setPortalOpen(false);
+  }
+
+  function setPortalOpen(open){
+    portalOpen=open;
+    if(!exitPortal) return;
+    const ud=exitPortal.userData;
+    const color=open?0x54e3ff:0x6f7880;
+    const emissive=open?0x1c9ec2:0x22272b;
+    ud.disc.material.color.setHex(color);
+    ud.disc.material.opacity=open?.62:.26;
+    ud.ring1.material.color.setHex(open?0xb3f3ff:0xa0a8af);
+    ud.ring1.material.opacity=open?.9:.42;
+    ud.ring2.material.color.setHex(open?0x8b74ff:0x777f86);
+    ud.beacon.material.color.setHex(open?0x6cecff:0x9099a2);
+    ud.beacon.material.emissive.setHex(emissive);
+    ud.beacon.material.emissiveIntensity=open?2.8:.5;
+    if(open){
+      burstFX(exitPortal.position.clone().add(new THREE.Vector3(0,1.7,0)),0x6de8ff,24,5);
+      sfx('pickup');
+    }
+  }
+
+  function setupLevelObjective(level){
+    if(isBossLevel(level)){
+      levelObjective={kind:'boss',done:false,total:1,progress:0};
+      return;
+    }
+    const kinds=['relics','runes','key','explore'];
+    const kind=kinds[(level-1)%kinds.length];
+    const count=kind==='key'?1:(level<16?2:3);
+    levelObjective={kind,done:false,total:count,progress:0};
+
+    const used=[];
+    for(let i=0;i<count;i++){
+      const p=chooseAdventurePoint(level,i,used);
+      used.push(p);
+      if(kind==='relics') createRelic(p[0],p[1],i);
+      if(kind==='runes') createRuneStone(p[0],p[1],i);
+      if(kind==='explore') createLandmark(p[0],p[1],i);
+      if(kind==='key') createAncientKey(p[0],p[1]);
+    }
+  }
+
+  function chooseAdventurePoint(level,index,used){
+    const route=routeForLevel(level);
+    for(let j=0;j<ADVENTURE_POINTS.length;j++){
+      const p=ADVENTURE_POINTS[(level*3+index*5+j)%ADVENTURE_POINTS.length];
+      if(Math.hypot(p[0]-route.start[0],p[1]-route.start[1])<5) continue;
+      if(Math.hypot(p[0]-route.exit[0],p[1]-route.exit[1])<3.5) continue;
+      if(used.some(q=>Math.hypot(p[0]-q[0],p[1]-q[1])<4)) continue;
+      return p;
+    }
+    return ADVENTURE_POINTS[(level+index)%ADVENTURE_POINTS.length];
+  }
+
+  function createRelic(x,z,index){
+    const g=new THREE.Group(); g.position.set(x,.65,z); adventureLayer.add(g);
+    const gem=part(g,new THREE.OctahedronGeometry(.36,0),standard(0xffd765,{emissive:0xffa421,emissiveIntensity:2.6}),[0,.5,0],[1,1.2,1],[0,0,0],false);
+    const ring=part(g,new THREE.TorusGeometry(.62,.045,6,20),basic(0xffe29a,.68),[0,.5,0],[1,1,1],[Math.PI/2,0,0],false);
+    levelItems.push({kind:'objective',subkind:'relic',group:g,gem,ring,done:false,index});
+  }
+
+  function createRuneStone(x,z,index){
+    const g=new THREE.Group(); g.position.set(x,.25,z); adventureLayer.add(g);
+    part(g,new THREE.CylinderGeometry(.58,.72,1.55,7),mats.ruinDark,[0,.75,0]);
+    const rune=part(g,new THREE.TorusGeometry(.28,.07,5,9),basic(0x8a939b,.5),[0,1.08,-.55],[1,1,1],[0,0,0],false);
+    const top=part(g,new THREE.OctahedronGeometry(.18,0),standard(0x858e96,{emissive:0x242a30,emissiveIntensity:.4}),[0,1.72,0],[1,1,1],[0,0,0],false);
+    levelItems.push({kind:'objective',subkind:'rune',group:g,rune,top,done:false,index});
+  }
+
+  function createLandmark(x,z,index){
+    const g=new THREE.Group(); g.position.set(x,.3,z); adventureLayer.add(g);
+    part(g,new THREE.CylinderGeometry(.5,.7,2.5,6),mats.ruin,[0,1.25,0]);
+    const flame=part(g,new THREE.ConeGeometry(.23,.72,7),standard(0x65dfff,{emissive:0x1c8fbb,emissiveIntensity:3}),[0,2.82,0],[1,1,1],[0,0,0],false);
+    const ring=part(g,new THREE.TorusGeometry(.75,.045,6,20),basic(0x65dfff,.35),[0,.08,0],[1,1,1],[Math.PI/2,0,0],false);
+    levelItems.push({kind:'objective',subkind:'landmark',group:g,flame,ring,done:false,index});
+  }
+
+  function createAncientKey(x,z){
+    const g=new THREE.Group(); g.position.set(x,.75,z); adventureLayer.add(g);
+    const ring=part(g,new THREE.TorusGeometry(.28,.09,8,18),standard(0xffce50,{emissive:0xff9d1f,emissiveIntensity:2}),[0,.35,0],[1,1,1],[Math.PI/2,0,0],false);
+    part(g,new THREE.BoxGeometry(.12,.75,.12),mats.gold,[0,.0,0]);
+    part(g,new THREE.BoxGeometry(.42,.12,.12),mats.gold,[.15,-.3,0]);
+    levelItems.push({kind:'objective',subkind:'key',group:g,ring,done:false,index:0});
+  }
+
+  function objectiveItemCollected(item){
+    if(item.done||!levelObjective||levelObjective.done) return;
+    item.done=true;
+    item.group.visible=false;
+    levelObjective.progress++;
+    burstFX(item.group.position.clone().add(new THREE.Vector3(0,.8,0)),item.subkind==='key'?0xffca4c:0x7be8ff,14,4.5);
+    sfx('pickup');
+    if(levelObjective.progress>=levelObjective.total){
+      levelObjective.done=true;
+      setPortalOpen(true);
+      showToast('PORTAL OPEN!',900);
+    }
+    updateObjectiveUI();
+  }
+
+  function updateObjectiveUI(){
+    if(!levelObjective) return;
+    if(levelObjective.kind==='boss'){
+      ui.objectiveTitle.textContent=`Level ${currentLevel}: Defeat the boss`;
+      ui.objectiveText.textContent=levelObjective.done?'The portal is open! Reach it.':'Defeat the Ancient Ghastly to unlock the portal.';
+      return;
+    }
+    const p=levelObjective.progress,t=levelObjective.total;
+    if(levelObjective.kind==='relics'){
+      ui.objectiveTitle.textContent='Find the lost relics';
+      ui.objectiveText.textContent=levelObjective.done?'Portal open — reach it!':`Explore the island and find relics: ${p}/${t}`;
+    }else if(levelObjective.kind==='runes'){
+      ui.objectiveTitle.textContent='Wake the ancient runes';
+      ui.objectiveText.textContent=levelObjective.done?'Portal open — reach it!':`Touch the rune stones: ${p}/${t}`;
+    }else if(levelObjective.kind==='key'){
+      ui.objectiveTitle.textContent='Find the portal key';
+      ui.objectiveText.textContent=levelObjective.done?'Portal open — reach it!':'Explore off the main path and find the golden key.';
+    }else{
+      ui.objectiveTitle.textContent='Explore the forgotten landmarks';
+      ui.objectiveText.textContent=levelObjective.done?'Portal open — reach it!':`Discover the glowing ruins: ${p}/${t}`;
+    }
+  }
+
+  function spawnInitialPatrol(level){
+    const count=isBossLevel(level)?2:Math.min(4,2+Math.floor(level/18));
+    for(let i=0;i<count;i++) spawnRoamingEnemy(i);
+  }
+
+  function spawnRoamingEnemy(seedOffset=0){
+    const cap=isBossLevel(currentLevel)?6:Math.min(8,4+Math.floor(currentLevel/12));
+    if(enemies.length>=cap) return;
+    const pool=poolForLevel(currentLevel);
+    const type=pool[(currentLevel+seedOffset+Math.floor(elapsed*2))%pool.length];
+    let p=null;
+    for(let j=0;j<LEVEL_SPAWNS.length;j++){
+      const candidate=LEVEL_SPAWNS[(currentLevel*2+seedOffset+j)%LEVEL_SPAWNS.length];
+      if(horizontalDistance(player.position,{x:candidate[0],z:candidate[1]})>7){
+        p=candidate; break;
+      }
+    }
+    if(!p) p=LEVEL_SPAWNS[(seedOffset+currentLevel)%LEVEL_SPAWNS.length];
+    spawnGhastly(p[0],p[1],type,(seedOffset+elapsed)*.61);
+  }
+
+  function spawnBossForLevel(level){
+    bossSpawned=true;
+    portalPower=1.0;
+    const route=routeForLevel(level);
+    const bx=(route.exit[0]*.66);
+    const bz=(route.exit[1]*.66);
+    boss=spawnGhastly(bx,bz,'boss',0);
+    boss.scale.setScalar(.12);
+    ui.bossHud.classList.remove('hidden');
+    showToast(`ANCIENT GHASTLY — LEVEL ${level}`,1350);
+    sfx('boss');
   }
 
   function clearCombatObjects(){
@@ -666,18 +915,18 @@
       winGame();
       return;
     }
-    hp=Math.min(maxHp,hp+Math.ceil(maxHp*.28));
+    hp=Math.min(maxHp,hp+Math.ceil(maxHp*.22));
     if(currentLevel%10===0) hp=maxHp;
     updateHUD();
-    showToast(`LEVEL ${currentLevel} CLEAR!`,850);
-    setTimeout(()=>startLevel(currentLevel+1),950);
+    showToast(`LEVEL ${currentLevel} COMPLETE!`,850);
+    setTimeout(()=>startLevel(currentLevel+1),850);
   }
 
   function spawnGhastly(x, z, type='drifter', phase=0) {
     const cfg=GHASTLY_TYPES[type]||GHASTLY_TYPES.drifter;
     const isBoss=type==='boss';
     const chapter=Math.floor((currentLevel-1)/10);
-    const hpScale=isBoss?1:(1+chapter*.12);
+    const hpScale=isBoss?(1+Math.max(0,currentLevel-10)/50):(1+chapter*.12);
 
     const g = new THREE.Group();
     g.position.set(x, isBoss ? 1.0 : .72, z);
@@ -719,14 +968,7 @@
   }
 
   function spawnBoss() {
-    if (bossSpawned) return;
-    bossSpawned=true;
-    portalPower=1.25;
-    boss=spawnGhastly(0,-15.7,'boss',0);
-    boss.scale.setScalar(.12);
-    ui.bossHud.classList.remove('hidden');
-    showToast('THE ANCIENT GHASTLY!',1500);
-    sfx('boss');
+    spawnBossForLevel(currentLevel);
   }
 
   const keyState = new Set();
@@ -868,7 +1110,16 @@
     scene.remove(e);
     const i=enemies.indexOf(e); if(i>=0) enemies.splice(i,1);
     burstFX(pos.clone().add(new THREE.Vector3(0,isBoss?2.2:1.2,0)),isBoss?0xe8edf2:0xb7bec6,isBoss?32:12,isBoss?7:4);
-    if(isBoss) ui.bossHud.classList.add('hidden');
+    if(isBoss){
+      ui.bossHud.classList.add('hidden');
+      if(levelObjective && levelObjective.kind==='boss'){
+        levelObjective.progress=1;
+        levelObjective.done=true;
+        setPortalOpen(true);
+        updateObjectiveUI();
+        showToast('BOSS DEFEATED — PORTAL OPEN!',1100);
+      }
+    }
   }
 
   function evolve() {
@@ -906,7 +1157,7 @@
     won = true; gameOver = true; portalPower = 1.6;
     ui.bossHud.classList.add('hidden');
     ui.objectiveTitle.textContent = 'Island saved!';
-    ui.objectiveText.textContent = 'Shadow Stalker defeated the Ancient Ghastly and cleared all 50 levels!';
+    ui.objectiveText.textContent = 'Shadow Stalker crossed all 50 portals and defeated every Ancient Ghastly!';
     showToast('ISLAND SAVED!\n✨ GREAT JOB! ✨', 5000);
     ui.restartBtn.textContent='PLAY AGAIN';
     ui.restartBtn.classList.remove('hidden');
@@ -1026,7 +1277,53 @@
 
     updateProjectiles(dt);
     updateEnemies(dt);
-    if(!levelTransition && enemies.length===0 && elapsed-levelStartedAt>.55) completeLevel();
+    updateAdventure(dt);
+    updateEnemySpawning(dt);
+  }
+
+  function updateEnemySpawning(dt){
+    if(levelTransition||gameOver) return;
+    enemySpawnTimer-=dt;
+    if(enemySpawnTimer<=0){
+      spawnRoamingEnemy(Math.floor(elapsed*3)%17);
+      enemySpawnTimer=Math.max(1.6,4.0-currentLevel*.035);
+    }
+  }
+
+  function updateAdventure(dt){
+    if(levelTransition||gameOver) return;
+
+    for(const item of levelItems){
+      if(item.done) continue;
+      if(item.kind==='objective'){
+        item.group.rotation.y += dt * (item.subkind==='key'?1.6:.35);
+        const d=horizontalDistance(player.position,item.group.position);
+        if(d<1.2) objectiveItemCollected(item);
+      }else if(item.kind==='treasure'){
+        item.gem.rotation.y+=dt*2.1;
+        item.gem.position.y=1+Math.sin(elapsed*4)*.08;
+        const d=horizontalDistance(player.position,item.group.position);
+        if(d<1.2){
+          item.done=true;
+          item.group.visible=false;
+          hp=Math.min(maxHp,hp+Math.ceil(maxHp*.25));
+          updateHUD();
+          showToast('TREASURE FOUND! + HEALTH',850);
+          burstFX(item.group.position.clone().add(new THREE.Vector3(0,.8,0)),0xffcf55,18,5);
+          sfx('pickup');
+        }
+      }
+    }
+
+    if(exitPortal){
+      const ud=exitPortal.userData;
+      ud.ring1.rotation.z+=dt*(portalOpen?1.8:.35);
+      ud.ring2.rotation.z-=dt*(portalOpen?1.25:.25);
+      ud.disc.material.opacity=(portalOpen ? .55 : .22)+Math.sin(elapsed*4)*.05;
+      ud.beacon.scale.y=.9+Math.sin(elapsed*5)*.12;
+      const d=horizontalDistance(player.position,exitPortal.position);
+      if(portalOpen && d<1.35) completeLevel();
+    }
   }
 
   function clampPlayer() {
