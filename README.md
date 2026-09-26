@@ -2,13 +2,14 @@
 
 A kid-friendly 3D browser action-adventure starring **Doom**, who evolves into **Shadow Stalker** while battling ghost enemies called **Ghastlies**.
 
-This prototype is built around the original Doom / Shadow Stalker character art and uses a stylized 2.5D character treatment inside a colorful 3D island world so the playable game stays visually close to the reference artwork.
+This prototype is built around the original Doom / Shadow Stalker character art. Doom, Shadow Stalker, and the Ghastlies are now real lightweight 3D characters assembled from stylized low-poly meshes, with toon shading and emissive red magic so the browser build stays close to the reference artwork while remaining fast enough for iPad.
 
 ## Current playable prototype
 
 - Third-person 3D island level with a clear path to the Shadow Gate
-- Doom character art with giant ears, glowing red markings, red eyes, and magic orbs
-- Ghost-like Ghastlies with the same black/red visual language
+- Fully 3D Doom with giant ears, glowing red markings, red eyes, claws, tail, and floating magic orbs
+- Fully 3D Shadow Stalker evolution with larger body, horns, jagged glowing mouth, claws, arrow tail, and overhead orbs
+- Fully 3D hooded Ghastlies with smoky tails, claws, glowing eyes, and floating animation
 - Eight Ghastlies to defeat and eight Shadow Energy pickups to collect
 - Doom evolves into the larger **Shadow Stalker** form
 - Shadow Stalker gains a close-range **Shadow Burst**
@@ -60,4 +61,4 @@ Then run **Actions → Publish to itch.io → Run workflow**.
 
 ## Art direction
 
-The target is a bright, polished, family-friendly fantasy adventure with dark charcoal characters, strong silhouettes, and vivid red shadow magic. The current characters are scalable SVG game sprites based directly on the Doom / Shadow Stalker reference design; they can later be swapped for full animated 3D models without changing the gameplay layer.
+The target is a bright, polished, family-friendly fantasy adventure with dark charcoal characters, strong silhouettes, and vivid red shadow magic. The current character models are intentionally simple procedural low-poly builds rather than final production assets, but they are genuine 3D models and are designed to approximate the reference silhouettes closely while keeping the prototype lightweight.
