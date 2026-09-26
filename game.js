@@ -6,7 +6,8 @@
   const loading = document.getElementById('loading');
   const isTouch = navigator.maxTouchPoints > 0 || matchMedia('(pointer:coarse)').matches;
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const ENERGY_TO_EVOLVE = 8;
+  const TOTAL_LEVELS = 50;
+  const EVOLVE_LEVEL = 30;
 
   let renderer;
   try {
@@ -37,6 +38,10 @@
     hearts: document.getElementById('hearts'),
     energyBar: document.getElementById('energyBar'),
     energyText: document.getElementById('energyText'),
+    energyLabel: document.getElementById('energyLabel'),
+    levelBadge: document.getElementById('levelBadge'),
+    chapterName: document.getElementById('chapterName'),
+    levelNumber: document.getElementById('levelNumber'),
     objectiveTitle: document.getElementById('objectiveTitle'),
     objectiveText: document.getElementById('objectiveText'),
     bossHud: document.getElementById('bossHud'),
@@ -239,35 +244,80 @@
     return g;
   }
 
-  function createGhastlyModel(scale=1) {
+  function createGhastlyModel(type='drifter', scale=1) {
     const g=new THREE.Group();
     g.scale.setScalar(scale);
-    const smoke=toon(0x191724);
-    const smoke2=toon(0x292536);
-    const voidMat=toon(0x05060a);
-    const red=toon(0xff284f,{emissive:0xff0a38,emissiveIntensity:3.5});
+
+    const looks={
+      drifter:{smoke:0x737982,smoke2:0xaeb3ba,face:0x30343b,eye:0xd9f4ff},
+      charger:{smoke:0x666b72,smoke2:0x999fa7,face:0x282c32,eye:0xffcf66},
+      brute:{smoke:0x555b63,smoke2:0x858b94,face:0x22262c,eye:0xff9d6b},
+      hexer:{smoke:0x686c78,smoke2:0xa5a9b5,face:0x292b35,eye:0xc89aff},
+      reaper:{smoke:0x434851,smoke2:0x747b85,face:0x171b20,eye:0x8feaff},
+      boss:{smoke:0x3b4048,smoke2:0x858b94,face:0x11151a,eye:0xe3e8ff}
+    };
+    const look=looks[type]||looks.drifter;
+    const smoke=toon(look.smoke);
+    const smoke2=toon(look.smoke2);
+    const voidMat=toon(look.face);
+    const eyeMat=toon(look.eye,{emissive:look.eye,emissiveIntensity:3.2});
+    const clawMat=toon(0x4a4f57,{emissive:0x111317,emissiveIntensity:.25});
 
     part(g,new THREE.SphereGeometry(.62,12,9),smoke2,[0,1.72,0],[1.08,.9,.95]);
     part(g,new THREE.ConeGeometry(.72,1.15,8),smoke,[0,2.05,.08],[1,1,.9],[0,0,Math.PI]);
     part(g,new THREE.SphereGeometry(.47,11,8),voidMat,[0,1.7,-.42],[1,.76,.5]);
-    for(const x of [-.2,.2]) part(g,new THREE.SphereGeometry(.12,9,6),red,[x,1.78,-.76],[1.15,1.65,.45],[0,0,0],false);
+    for(const x of [-.2,.2]) part(g,new THREE.SphereGeometry(.12,9,6),eyeMat,[x,1.78,-.76],[1.15,1.65,.45],[0,0,0],false);
 
     const armL=new THREE.Group(); armL.position.set(-.58,1.25,0); armL.rotation.z=-.8; g.add(armL);
     const armR=new THREE.Group(); armR.position.set(.58,1.25,0); armR.rotation.z=.8; g.add(armR);
     for(const arm of [armL,armR]){
       part(arm,new THREE.CapsuleGeometry(.12,.52,4,7),smoke,[0,.25,0]);
       const hand=part(arm,new THREE.SphereGeometry(.2,8,6),smoke2,[0,.62,-.05]);
-      for(let i=-1;i<=1;i++) part(hand,new THREE.ConeGeometry(.04,.25,4),red,[i*.08,.02,-.18],[1,1,1],[Math.PI/2,0,0],false);
+      for(let i=-1;i<=1;i++) part(hand,new THREE.ConeGeometry(.04,.25,4),clawMat,[i*.08,.02,-.18],[1,1,1],[Math.PI/2,0,0],false);
     }
+
     const tail=new THREE.Group(); tail.position.set(0,.95,.08); g.add(tail);
     part(tail,new THREE.ConeGeometry(.5,1.4,8),smoke,[0,-.55,0],[1,1,.9],[0,0,0]);
     part(tail,new THREE.SphereGeometry(.28,8,6),smoke2,[.15,-1.2,.05],[1.2,.65,.8]);
     part(tail,new THREE.ConeGeometry(.22,.75,7),smoke,[.34,-1.55,.05],[1,1,.8],[0,0,-.7]);
 
     const wisp=part(g,new THREE.ConeGeometry(.18,.62,6),smoke2,[.14,2.78,.05],[1,1,.75],[0,0,-.45]);
+
+    if(type==='charger'){
+      for(const x of [-.34,.34]) part(g,new THREE.ConeGeometry(.12,.58,5),smoke2,[x,2.46,-.08],[1,1,.75],[0,0,x<0?-.5:.5]);
+      g.scale.x*=.9;
+    }
+    if(type==='brute'||type==='boss'){
+      for(const x of [-.7,.7]) part(g,new THREE.DodecahedronGeometry(.3,0),smoke2,[x,1.5,.02],[1.35,.75,1.0]);
+      armL.scale.setScalar(1.18); armR.scale.setScalar(1.18);
+    }
+    if(type==='hexer'){
+      const orb=makeMagicOrb(g,0,1.05,-.58,.16,look.eye);
+      orb.userData.isEnemyOrb=true;
+      g.userData.magicOrb=orb;
+    }
+    if(type==='reaper'||type==='boss'){
+      for(let i=-2;i<=2;i++){
+        part(g,new THREE.ConeGeometry(.09,.5,5),smoke2,[i*.18,2.53-Math.abs(i)*.04,-.02],[1,1,.7],[0,0,i*.14]);
+      }
+    }
+    if(type==='boss'){
+      const crown=part(g,new THREE.TorusGeometry(.8,.08,6,20),basic(look.eye,.42),[0,2.28,.05],[1,.72,1],[Math.PI/2,0,0],false);
+      crown.userData.spin=1.2;
+    }
+
     g.userData.animated={armL,armR,tail,wisp};
     return g;
   }
+
+  const GHASTLY_TYPES = {
+    drifter:{name:'Drifter',hp:2,speed:1.18,damage:8,scale:1,aura:0xb9c0c8},
+    charger:{name:'Charger',hp:4,speed:1.55,damage:11,scale:.96,aura:0xd7b56e,charge:true},
+    brute:{name:'Brute',hp:8,speed:.86,damage:17,scale:1.25,aura:0x8e949b},
+    hexer:{name:'Hexer',hp:6,speed:1.0,damage:9,scale:1.04,aura:0xb987e8,ranged:true,range:6.1,shotEvery:1.75,shotDamage:9,shotColor:0xb77cff},
+    reaper:{name:'Reaper',hp:11,speed:1.38,damage:14,scale:1.08,aura:0x7dd8e6,ranged:true,range:4.9,shotEvery:2.15,shotDamage:12,shotColor:0x75dff2},
+    boss:{name:'Ancient Ghastly',hp:48,speed:1.0,damage:21,scale:1.8,aura:0xd3d7dc,ranged:true,range:5.8,shotEvery:1.5,shotDamage:15,shotColor:0xc7ccda}
+  };
 
   const mats = {
     grass: standard(0x57a64a),
@@ -463,12 +513,14 @@
   let playerGlow;
   let hp = 120;
   let maxHp = 120;
-  let energy = 0;
+  let currentLevel = 1;
   let evolved = false;
   let gameOver = false;
   let won = false;
   let boss = null;
   let bossSpawned = false;
+  let levelTransition = false;
+  let levelStartedAt = 0;
   let attackCooldown = 0;
   let dashCooldown = 0;
   let dashTimer = 0;
@@ -487,7 +539,7 @@
 
   function startGame() {
     createPlayer();
-    spawnInitialEnemies();
+    startLevel(1);
     updateHUD();
     requestAnimationFrame(() => loading.classList.add('ready'));
     setTimeout(() => loading.remove(), 700);
@@ -509,45 +561,150 @@
     player.add(playerModel);
   }
 
-  function spawnInitialEnemies() {
-    const spots = [
-      [-5.8, 5.4], [5.4, 3.4], [-6.5, -1.5], [5.8, -3.7],
-      [-4.4, -8.4], [5.0, -10.2], [-6.3, -13.4], [5.5, -14.8]
-    ];
-    spots.forEach((s, i) => spawnGhastly(s[0], s[1], false, i * .6));
+  const LEVEL_SPAWNS=[
+    [-5.8,5.4],[5.4,3.4],[-6.5,-1.5],[5.8,-3.7],[-4.4,-8.4],
+    [5.0,-10.2],[-6.3,-13.4],[5.5,-14.8],[-9.2,-5.7],[9.0,-7.1],
+    [-8.0,1.6],[8.2,-.2]
+  ];
+
+  function chapterForLevel(level){
+    if(level<10) return {name:'SUNNY SHORE',sky:0x7fc6ef,fog:0x8dc9e8,hemi:0xe8f8ff};
+    if(level<20) return {name:'MISTY GROVE',sky:0x7ab6c6,fog:0x789da7,hemi:0xd9f3eb};
+    if(level<30) return {name:'STONE RUINS',sky:0x8c9eae,fog:0x7d8892,hemi:0xe1e5e8};
+    if(level<40) return {name:'TWILIGHT REACH',sky:0x756f9e,fog:0x635f83,hemi:0xded9ff};
+    if(level<50) return {name:'SHADOW FRONTIER',sky:0x4d566f,fog:0x41485d,hemi:0xcdd5ef};
+    return {name:'ANCIENT GATE',sky:0x343947,fog:0x30343e,hemi:0xd7d9e1};
   }
 
-  function spawnGhastly(x, z, isBoss = false, phase = 0) {
+  function setChapterTheme(level){
+    const ch=chapterForLevel(level);
+    scene.background.setHex(ch.sky);
+    scene.fog.color.setHex(ch.fog);
+    hemi.color.setHex(ch.hemi);
+    ui.chapterName.textContent=ch.name;
+  }
+
+  function poolForLevel(level){
+    if(level<10) return ['drifter'];
+    if(level<20) return ['drifter','charger','charger'];
+    if(level<30) return ['charger','brute','drifter','brute'];
+    if(level<40) return ['charger','brute','hexer','hexer'];
+    return ['brute','hexer','reaper','reaper'];
+  }
+
+  function newTypeAt(level){
+    return ({10:'charger',20:'brute',30:'hexer',40:'reaper'})[level]||null;
+  }
+
+  function startLevel(level){
+    currentLevel=level;
+    levelTransition=true;
+    levelStartedAt=elapsed;
+    bossSpawned=false;
+    boss=null;
+    ui.bossHud.classList.add('hidden');
+    player.position.set(0,.3,10.8);
+    clearCombatObjects();
+    setChapterTheme(level);
+    updateHUD();
+
+    const beginWave=()=>{
+      spawnLevelWave(level);
+      levelStartedAt=elapsed;
+      levelTransition=false;
+      ui.objectiveTitle.textContent = level===50 ? 'Final Level: Ancient Ghastly' : `Level ${level}: Defeat the Ghastlies`;
+      ui.objectiveText.textContent = level===50 ? 'Defeat the Ancient Ghastly and its guardians!' : `${enemies.length} Ghastlies are haunting this area.`;
+      const intro=newTypeAt(level);
+      if(intro) showToast(`NEW GHASTLY: ${GHASTLY_TYPES[intro].name.toUpperCase()}!`,1300);
+      else if(level>1) showToast(`LEVEL ${level}`,700);
+    };
+
+    if(level===EVOLVE_LEVEL && !evolved){
+      evolve();
+      setTimeout(beginWave,1450);
+    }else{
+      beginWave();
+    }
+  }
+
+  function spawnLevelWave(level){
+    if(level===TOTAL_LEVELS){
+      spawnBoss();
+      ['reaper','reaper','hexer','brute'].forEach((type,i)=>{
+        const p=LEVEL_SPAWNS[(i*2+3)%LEVEL_SPAWNS.length];
+        spawnGhastly(p[0],p[1],type,i*.7);
+      });
+      return;
+    }
+
+    let count=Math.min(10,3+Math.floor((level-1)/5));
+    if(level%10===0) count=Math.min(10,count+1);
+    const pool=poolForLevel(level);
+    const guaranteed=newTypeAt(level);
+    for(let i=0;i<count;i++){
+      const type=(i===0&&guaranteed)?guaranteed:pool[(i+level)%pool.length];
+      const p=LEVEL_SPAWNS[(i*3+level)%LEVEL_SPAWNS.length];
+      spawnGhastly(p[0],p[1],type,i*.61);
+    }
+  }
+
+  function clearCombatObjects(){
+    for(const e of [...enemies]) scene.remove(e);
+    enemies.length=0;
+    for(const p of [...projectiles]) scene.remove(p);
+    projectiles.length=0;
+    for(const p of [...hostileProjectiles]) scene.remove(p);
+    hostileProjectiles.length=0;
+    for(const p of [...pickups]) scene.remove(p);
+    pickups.length=0;
+  }
+
+  function completeLevel(){
+    if(levelTransition||gameOver) return;
+    levelTransition=true;
+    if(currentLevel>=TOTAL_LEVELS){
+      winGame();
+      return;
+    }
+    hp=Math.min(maxHp,hp+Math.ceil(maxHp*.28));
+    if(currentLevel%10===0) hp=maxHp;
+    updateHUD();
+    showToast(`LEVEL ${currentLevel} CLEAR!`,850);
+    setTimeout(()=>startLevel(currentLevel+1),950);
+  }
+
+  function spawnGhastly(x, z, type='drifter', phase=0) {
+    const cfg=GHASTLY_TYPES[type]||GHASTLY_TYPES.drifter;
+    const isBoss=type==='boss';
+    const chapter=Math.floor((currentLevel-1)/10);
+    const hpScale=isBoss?1:(1+chapter*.12);
+
     const g = new THREE.Group();
     g.position.set(x, isBoss ? 1.0 : .72, z);
     scene.add(g);
 
-    const model = createGhastlyModel(isBoss ? 1.75 : 1);
+    const model = createGhastlyModel(type,cfg.scale);
     g.add(model);
 
-    const aura = addMesh(new THREE.RingGeometry(isBoss ? .9 : .42, isBoss ? 2.0 : .95, 28), basic(0xff163f, isBoss ? .32 : .18), g, false, false);
+    const aura = addMesh(new THREE.RingGeometry(isBoss ? .9 : .42, isBoss ? 2.0 : .95, 28), basic(cfg.aura, isBoss ? .28 : .12), g, false, false);
     aura.rotation.x = -Math.PI / 2;
     aura.position.y = -.55;
 
     const bar = new THREE.Group();
-    bar.position.y = isBoss ? 6.7 : 3.4;
+    bar.position.y = isBoss ? 6.9 : 3.55*cfg.scale;
     g.add(bar);
     addMesh(new THREE.PlaneGeometry(isBoss ? 2.8 : 1.45, .18), basic(0x17191f, .94), bar, false, false);
-    const fill = addMesh(new THREE.PlaneGeometry(isBoss ? 2.65 : 1.34, .11), basic(0xff294f, 1), bar, false, false);
+    const fill = addMesh(new THREE.PlaneGeometry(isBoss ? 2.65 : 1.34, .11), basic(isBoss?0xd8dde3:0x9aa1aa, 1), bar, false, false);
     fill.position.z = .01;
     fill.userData.fullWidth = isBoss ? 2.65 : 1.34;
 
+    const hpValue=Math.ceil(cfg.hp*hpScale);
     g.userData = {
-      isEnemy: true,
-      boss: isBoss,
-      hp: isBoss ? 24 : 2,
-      maxHp: isBoss ? 24 : 2,
-      speed: isBoss ? 1.2 : 1.15 + rand() * .38,
-      model, modelScale: isBoss ? 1.75 : 1, aura, bar, fill,
-      phase,
-      hitTimer: 0,
-      attackTimer: 1 + rand() * 1.5,
-      contactTimer: 0
+      isEnemy:true,boss:isBoss,type,cfg,
+      hp:hpValue,maxHp:hpValue,speed:cfg.speed,damage:cfg.damage,
+      model,modelScale:cfg.scale,aura,bar,fill,phase,
+      hitTimer:0,attackTimer:(cfg.shotEvery||2)+rand()*.7,contactTimer:0,
+      chargeTimer:0,chargeCooldown:1.2+rand()*1.4
     };
     enemies.push(g);
     return g;
@@ -563,14 +720,12 @@
 
   function spawnBoss() {
     if (bossSpawned) return;
-    bossSpawned = true;
-    portalPower = 1;
-    boss = spawnGhastly(0, -17.4, true, 0);
+    bossSpawned=true;
+    portalPower=1.25;
+    boss=spawnGhastly(0,-15.7,'boss',0);
     boss.scale.setScalar(.12);
     ui.bossHud.classList.remove('hidden');
-    ui.objectiveTitle.textContent = 'Defeat the Ancient Ghastly';
-    ui.objectiveText.textContent = 'Use Shadow Burst when the Ghastly gets close!';
-    showToast('THE ANCIENT GHASTLY!', 1550);
+    showToast('THE ANCIENT GHASTLY!',1500);
     sfx('boss');
   }
 
@@ -676,13 +831,25 @@
     sfx('burst');
   }
 
-  function bossShot(e) {
-    const dir = player.position.clone().sub(e.position); dir.y = 0; dir.normalize();
-    const orb = new THREE.Mesh(new THREE.SphereGeometry(.35, 12, 8), new THREE.MeshBasicMaterial({ color: 0xb040ff }));
-    orb.position.copy(e.position).add(new THREE.Vector3(0, 2.1, 0));
-    orb.userData = { vel: dir.multiplyScalar(7.2), life: 3, damage: 14 };
-    scene.add(orb); hostileProjectiles.push(orb);
-    burstFX(orb.position, 0xb040ff, 8, 3);
+  function enemyShot(e) {
+    const ud=e.userData;
+    const baseDir=player.position.clone().sub(e.position); baseDir.y=0; baseDir.normalize();
+    const shots=ud.boss?3:1;
+    for(let i=0;i<shots;i++){
+      const dir=baseDir.clone();
+      if(shots>1){
+        const angle=(i-1)*.18;
+        const x=dir.x*Math.cos(angle)-dir.z*Math.sin(angle);
+        const z=dir.x*Math.sin(angle)+dir.z*Math.cos(angle);
+        dir.set(x,0,z);
+      }
+      const color=ud.cfg.shotColor||0xbfc5cc;
+      const orb=new THREE.Mesh(new THREE.SphereGeometry(ud.boss ? .36 : .25,12,8),new THREE.MeshBasicMaterial({color}));
+      orb.position.copy(e.position).add(new THREE.Vector3(0,ud.boss?2.4:1.6,0));
+      orb.userData={vel:dir.multiplyScalar(ud.boss?7.4:6.4),life:3,damage:ud.cfg.shotDamage||9};
+      scene.add(orb); hostileProjectiles.push(orb);
+      burstFX(orb.position,color,6,2.8);
+    }
   }
 
   function damageEnemy(e, amount) {
@@ -690,60 +857,39 @@
     e.userData.hp -= amount;
     e.userData.hitTimer = .14;
     updateEnemyBar(e);
-    burstFX(e.position.clone().add(new THREE.Vector3(0, e.userData.boss ? 2.4 : 1.3, 0)), 0xff2850, e.userData.boss ? 15 : 8, e.userData.boss ? 5 : 3.5);
+    burstFX(e.position.clone().add(new THREE.Vector3(0, e.userData.boss ? 2.4 : 1.3, 0)), e.userData.cfg.aura, e.userData.boss ? 15 : 8, e.userData.boss ? 5 : 3.5);
     sfx('hit');
     if (e.userData.hp <= 0) killEnemy(e);
   }
 
   function killEnemy(e) {
-    const isBoss = e.userData.boss;
-    const pos = e.position.clone();
+    const isBoss=e.userData.boss;
+    const pos=e.position.clone();
     scene.remove(e);
-    const i = enemies.indexOf(e); if (i >= 0) enemies.splice(i, 1);
-    if (isBoss) winGame(); else dropEnergy(pos);
-  }
-
-  function dropEnergy(pos) {
-    const g = new THREE.Group(); g.position.copy(pos); g.position.y = .6; scene.add(g);
-    addMesh(new THREE.OctahedronGeometry(.3, 0), standard(0xff2f59, { emissive: 0xff0b38, emissiveIntensity: 4, roughness: .25, flat: false }), g, false, false);
-    const ring = addMesh(new THREE.TorusGeometry(.45, .04, 6, 20), basic(0xff6680, .75), g, false, false);
-    ring.rotation.x = Math.PI / 2;
-    g.userData = { t: rand() * 5 };
-    pickups.push(g);
-  }
-
-  function collectEnergy(p) {
-    scene.remove(p);
-    const i = pickups.indexOf(p); if (i >= 0) pickups.splice(i, 1);
-    energy = Math.min(ENERGY_TO_EVOLVE, energy + 1);
-    updateHUD();
-    burstFX(player.position.clone().add(new THREE.Vector3(0, .8, 0)), 0xff1948, 16, 5);
-    sfx('pickup');
-    if (energy >= ENERGY_TO_EVOLVE && !evolved) evolve();
+    const i=enemies.indexOf(e); if(i>=0) enemies.splice(i,1);
+    burstFX(pos.clone().add(new THREE.Vector3(0,isBoss?2.2:1.2,0)),isBoss?0xe8edf2:0xb7bec6,isBoss?32:12,isBoss?7:4);
+    if(isBoss) ui.bossHud.classList.add('hidden');
   }
 
   function evolve() {
-    evolved = true;
-    maxHp = 160;
-    hp = Math.min(maxHp, hp + 70);
+    evolved=true;
+    maxHp=170;
+    hp=maxHp;
 
-    const old = playerModel;
+    const old=playerModel;
     player.remove(old);
-    playerModel = createShadowStalkerModel();
+    playerModel=createShadowStalkerModel();
     player.add(playerModel);
     playerGlow.scale.setScalar(1.5);
 
-    ui.formName.textContent = 'SHADOW STALKER';
+    ui.formName.textContent='SHADOW STALKER';
     ui.specialBtn.classList.remove('hidden');
-    ui.objectiveTitle.textContent = 'The Shadow Gate is open!';
-    ui.objectiveText.textContent = 'Face the Ancient Ghastly beyond the ruins.';
     updateHUD();
     ui.evolveBanner.classList.remove('hidden');
-    setTimeout(() => ui.evolveBanner.classList.add('hidden'), 1900);
-    portalPower = .75;
-    for (let n = 0; n < 4; n++) setTimeout(() => burstFX(player.position.clone().add(new THREE.Vector3(0, 1.4, 0)), 0xff153f, isTouch ? 28 : 40, 8), n * 150);
+    setTimeout(()=>ui.evolveBanner.classList.add('hidden'),1900);
+    portalPower=.8;
+    for(let n=0;n<4;n++) setTimeout(()=>burstFX(player.position.clone().add(new THREE.Vector3(0,1.4,0)),0xff153f,isTouch?28:40,8),n*150);
     sfx('evolve');
-    setTimeout(spawnBoss, 1500);
   }
 
   function damagePlayer(amount) {
@@ -760,8 +906,9 @@
     won = true; gameOver = true; portalPower = 1.6;
     ui.bossHud.classList.add('hidden');
     ui.objectiveTitle.textContent = 'Island saved!';
-    ui.objectiveText.textContent = 'Doom and Shadow Stalker defeated the Ghastlies.';
+    ui.objectiveText.textContent = 'Shadow Stalker defeated the Ancient Ghastly and cleared all 50 levels!';
     showToast('ISLAND SAVED!\n✨ GREAT JOB! ✨', 5000);
+    ui.restartBtn.textContent='PLAY AGAIN';
     ui.restartBtn.classList.remove('hidden');
     for (let i = 0; i < 8; i++) setTimeout(() => burstFX(new THREE.Vector3((rand() - .5) * 14, 2 + rand() * 3, -10 + (rand() - .5) * 12), i % 2 ? 0xff244f : 0xffc14d, 24, 8), i * 130);
     sfx('win');
@@ -769,22 +916,40 @@
 
   function loseGame() {
     gameOver = true;
-    showToast('DOOM NEEDS A REST!\nTry again?', 5000);
+    showToast('DOOM NEEDS A REST!\nTry this level again?', 5000);
+    ui.restartBtn.textContent='RETRY LEVEL';
     ui.restartBtn.classList.remove('hidden');
   }
 
-  function restart() { location.reload(); }
+  function restart() {
+    if(won){ location.reload(); return; }
+    gameOver=false;
+    hp=maxHp;
+    invulnerable=1;
+    ui.restartBtn.classList.add('hidden');
+    player.visible=true;
+    startLevel(currentLevel);
+  }
 
   function updateHUD() {
-    const hearts = 6;
-    const filled = Math.ceil((hp / maxHp) * hearts);
-    ui.hearts.innerHTML = '';
-    for (let i = 0; i < hearts; i++) {
-      const h = document.createElement('span'); h.className = 'heart' + (i < filled ? ' full' : ''); ui.hearts.appendChild(h);
+    const hearts=6;
+    const filled=Math.ceil((hp/maxHp)*hearts);
+    ui.hearts.innerHTML='';
+    for(let i=0;i<hearts;i++){
+      const h=document.createElement('span'); h.className='heart'+(i<filled?' full':''); ui.hearts.appendChild(h);
     }
-    const ratio = Math.min(1, energy / ENERGY_TO_EVOLVE);
-    ui.energyBar.style.width = `${ratio * 100}%`;
-    ui.energyText.textContent = `${energy} / ${ENERGY_TO_EVOLVE}`;
+
+    ui.levelNumber.textContent=currentLevel;
+    if(!evolved){
+      const ratio=Math.min(1,Math.max(0,(currentLevel-1)/(EVOLVE_LEVEL-1)));
+      ui.energyLabel.textContent='EVOLUTION';
+      ui.energyBar.style.width=`${ratio*100}%`;
+      ui.energyText.textContent=`LEVEL ${currentLevel} / ${EVOLVE_LEVEL}`;
+    }else{
+      ui.energyLabel.textContent='SHADOW STALKER';
+      ui.energyBar.style.width='100%';
+      ui.energyText.textContent='EVOLVED';
+    }
   }
 
   function showToast(text, ms = 1200) {
@@ -861,7 +1026,7 @@
 
     updateProjectiles(dt);
     updateEnemies(dt);
-    updatePickups(dt);
+    if(!levelTransition && enemies.length===0 && elapsed-levelStartedAt>.55) completeLevel();
   }
 
   function clampPlayer() {
@@ -900,45 +1065,75 @@
   function updateEnemies(dt) {
     for (const e of [...enemies]) {
       if (!e.parent) continue;
-      const ud = e.userData;
-      ud.hitTimer = Math.max(0, ud.hitTimer - dt);
-      ud.contactTimer = Math.max(0, ud.contactTimer - dt);
-      ud.attackTimer -= dt;
+      const ud=e.userData;
+      ud.hitTimer=Math.max(0,ud.hitTimer-dt);
+      ud.contactTimer=Math.max(0,ud.contactTimer-dt);
+      ud.attackTimer-=dt;
+      ud.chargeCooldown-=dt;
+      ud.chargeTimer=Math.max(0,ud.chargeTimer-dt);
 
-      if (ud.boss && e.scale.x < .995) {
-        const s = THREE.MathUtils.lerp(e.scale.x, 1, 1 - Math.pow(.0001, dt));
-        e.scale.setScalar(s);
+      if(ud.boss && e.scale.x<.995){
+        const sc=THREE.MathUtils.lerp(e.scale.x,1,1-Math.pow(.0001,dt));
+        e.scale.setScalar(sc);
       }
 
-      const toPlayer = player.position.clone().sub(e.position); toPlayer.y = 0;
-      const d = toPlayer.length();
-      if (d > (ud.boss ? 2.5 : 1.05)) {
-        toPlayer.normalize();
-        const orbit = new THREE.Vector3(-toPlayer.z, 0, toPlayer.x).multiplyScalar(Math.sin(elapsed * .9 + ud.phase) * .34);
-        const vel = toPlayer.add(orbit).normalize();
-        e.position.addScaledVector(vel, ud.speed * dt * (ud.boss ? .85 : 1));
-      } else if (ud.contactTimer <= 0) {
-        damagePlayer(ud.boss ? 18 : 10); ud.contactTimer = .85;
+      const toPlayer=player.position.clone().sub(e.position); toPlayer.y=0;
+      const d=toPlayer.length();
+      const dir=toPlayer.lengthSq()>.001?toPlayer.clone().normalize():new THREE.Vector3(0,0,1);
+
+      if(ud.cfg.charge && ud.chargeCooldown<=0 && d>2 && d<8){
+        ud.chargeTimer=.55;
+        ud.chargeCooldown=2.0+rand()*1.1;
+        burstFX(e.position.clone().add(new THREE.Vector3(0,1.1,0)),0xd0b36e,8,3);
       }
 
-      if (ud.boss && ud.attackTimer <= 0 && d > 4) {
-        bossShot(e); ud.attackTimer = 2.0 + rand() * .8;
+      let moveDir=new THREE.Vector3();
+      if(ud.cfg.ranged){
+        const desired=ud.cfg.range||5.5;
+        if(d>desired+1) moveDir.copy(dir);
+        else if(d<desired-1.1) moveDir.copy(dir).multiplyScalar(-1);
+        else moveDir.set(-dir.z,0,dir.x).multiplyScalar(Math.sin(elapsed*.9+ud.phase)>0?1:-1);
+      }else if(d>(ud.boss?2.7:1.1)){
+        moveDir.copy(dir);
+        moveDir.add(new THREE.Vector3(-dir.z,0,dir.x).multiplyScalar(Math.sin(elapsed*.9+ud.phase)*.28)).normalize();
       }
 
-      const floatBase = ud.boss ? 1.1 : .72;
-      e.position.y = floatBase + Math.sin(elapsed * 2.2 + ud.phase) * (ud.boss ? .2 : .27);
-      ud.model.rotation.y = Math.atan2(-toPlayer.x, -toPlayer.z);
-      const ghAnim = ud.model.userData.animated;
-      if (ghAnim) {
-        ghAnim.armL.rotation.z = -.8 + Math.sin(elapsed * 3 + ud.phase) * .16;
-        ghAnim.armR.rotation.z = .8 - Math.sin(elapsed * 3 + ud.phase) * .16;
-        ghAnim.tail.rotation.z = Math.sin(elapsed * 2.1 + ud.phase) * .12;
-        ghAnim.wisp.rotation.z = -.45 + Math.sin(elapsed * 2.8 + ud.phase) * .2;
+      if(moveDir.lengthSq()>.001){
+        const speedBoost=ud.chargeTimer>0?2.45:1;
+        e.position.addScaledVector(moveDir.normalize(),ud.speed*speedBoost*dt);
       }
-      const hitPulse = ud.hitTimer > 0 ? 1.1 : 1;
-      ud.model.scale.setScalar(ud.modelScale * hitPulse);
-      ud.aura.rotation.z += dt * (ud.boss ? 1.3 : .65);
-      ud.aura.material.opacity = (ud.boss ? .28 : .15) + Math.sin(elapsed * 4 + ud.phase) * .05;
+
+      if(d<(ud.boss?2.5:1.0) && ud.contactTimer<=0){
+        damagePlayer(ud.damage);
+        ud.contactTimer=.82;
+      }
+
+      if(ud.cfg.ranged && ud.attackTimer<=0 && d<12){
+        enemyShot(e);
+        ud.attackTimer=(ud.cfg.shotEvery||2)+rand()*.45;
+      }
+
+      const floatBase=ud.boss?1.1:.72;
+      e.position.y=floatBase+Math.sin(elapsed*2.2+ud.phase)*(ud.boss ? .2 : .27);
+      ud.model.rotation.y=Math.atan2(-toPlayer.x,-toPlayer.z);
+      const ghAnim=ud.model.userData.animated;
+      if(ghAnim){
+        const frantic=ud.chargeTimer>0?2.2:1;
+        ghAnim.armL.rotation.z=-.8+Math.sin(elapsed*3*frantic+ud.phase)*.16;
+        ghAnim.armR.rotation.z=.8-Math.sin(elapsed*3*frantic+ud.phase)*.16;
+        ghAnim.tail.rotation.z=Math.sin(elapsed*2.1+ud.phase)*.12;
+        ghAnim.wisp.rotation.z=-.45+Math.sin(elapsed*2.8+ud.phase)*.2;
+      }
+      if(ud.model.userData.magicOrb){
+        const mo=ud.model.userData.magicOrb;
+        mo.rotation.y+=dt*2;
+        for(const r of mo.userData.rings||[]) r.rotation.z+=dt*1.8;
+      }
+      ud.model.traverse(o=>{ if(o.userData.spin) o.rotation.z+=dt*o.userData.spin; });
+      const hitPulse=ud.hitTimer>0?1.1:1;
+      ud.model.scale.setScalar(ud.modelScale*hitPulse);
+      ud.aura.rotation.z+=dt*(ud.boss?1.3:.65);
+      ud.aura.material.opacity=(ud.boss ? .25 : .1)+Math.sin(elapsed*4+ud.phase)*.04;
       ud.bar.quaternion.copy(camera.quaternion);
     }
   }
