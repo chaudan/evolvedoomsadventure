@@ -2,54 +2,82 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#10131c" />
   <title>Doom's Adventure</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div id="game"></div>
+  <main id="game" aria-label="Doom's Adventure game"></main>
 
-  <div id="hud">
-    <div class="panel left">
-      <div class="name" id="formName">DOOM</div>
-      <div class="bar"><div id="healthBar" class="fill health"></div></div>
-      <div class="small">HEALTH <span id="healthText">100 / 100</span></div>
-    </div>
-    <div class="panel right">
-      <div class="small">SHADOW ENERGY</div>
-      <div class="bar"><div id="energyBar" class="fill energy"></div></div>
-      <div class="small"><span id="energyText">0 / 8</span></div>
-    </div>
-  </div>
-
-  <div id="objective">Defeat Ghastlies and collect their shadow energy!</div>
-  <div id="bossBanner" class="hidden">THE ANCIENT GHASTLY AWAKENS!</div>
-  <div id="message" class="hidden"></div>
-
-  <div id="controls">
-    <span>Move: WASD / Arrows</span>
-    <span>Attack: Space</span>
-    <span>Dash: Shift</span>
-    <span id="specialHint" class="hidden">Shadow Burst: E</span>
-  </div>
-
-  <div id="touchControls">
-    <div class="dpad">
-      <button data-key="ArrowUp">▲</button>
-      <div>
-        <button data-key="ArrowLeft">◀</button>
-        <button data-key="ArrowDown">▼</button>
-        <button data-key="ArrowRight">▶</button>
+  <section id="hud" aria-live="polite">
+    <div class="hud-card player-card">
+      <div class="portrait" aria-hidden="true"><div class="portrait-eyes">••</div></div>
+      <div class="hud-copy">
+        <div class="hud-title" id="formName">DOOM</div>
+        <div class="health-hearts" id="hearts" aria-label="Health"></div>
       </div>
     </div>
-    <div class="actions">
-      <button data-key="Space" class="attackBtn">ORB</button>
-      <button data-key="ShiftLeft">DASH</button>
-      <button data-key="KeyE" id="touchSpecial" class="hidden">BURST</button>
+
+    <div class="hud-card energy-card">
+      <div class="energy-icon" aria-hidden="true">✦</div>
+      <div class="hud-copy energy-copy">
+        <div class="hud-label">SHADOW ENERGY</div>
+        <div class="bar"><div id="energyBar" class="fill energy-fill"></div></div>
+        <div class="meter-text" id="energyText">0 / 8</div>
+      </div>
     </div>
+  </section>
+
+  <aside id="objective" class="objective-card">
+    <span class="objective-diamond" aria-hidden="true"></span>
+    <div>
+      <strong id="objectiveTitle">Defeat the Ghastlies</strong>
+      <span id="objectiveText">Collect their shadow energy to evolve Doom.</span>
+    </div>
+  </aside>
+
+  <div id="bossHud" class="boss-hud hidden" aria-live="polite">
+    <div class="boss-name">ANCIENT GHASTLY</div>
+    <div class="boss-bar"><div id="bossHealth" class="boss-fill"></div></div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.min.js"></script>
+  <div id="toast" class="toast hidden"></div>
+  <div id="evolveBanner" class="evolve-banner hidden">SHADOW STALKER!</div>
+
+  <div id="desktopHelp" class="desktop-help">
+    WASD / Arrows · <b>Space</b> Orb · <b>Shift</b> Dash · <b>E</b> Shadow Burst
+  </div>
+
+  <section id="touchControls" aria-label="Touch controls">
+    <div id="joystick" class="joystick" aria-label="Movement joystick">
+      <div class="joystick-ring"></div>
+      <div id="joystickKnob" class="joystick-knob"></div>
+    </div>
+    <div class="action-stack">
+      <button id="specialBtn" class="action-button special-button hidden" type="button" aria-label="Shadow Burst"><span>✦</span><small>BURST</small></button>
+      <button id="dashBtn" class="action-button dash-button" type="button" aria-label="Dash"><span>➤</span><small>DASH</small></button>
+      <button id="attackBtn" class="action-button attack-button" type="button" aria-label="Fire Doom Orb"><span class="orb-icon"></span><small>ORB</small></button>
+    </div>
+  </section>
+
+  <button id="restartBtn" class="restart hidden" type="button">PLAY AGAIN</button>
+
+  <div id="rotateHint" class="rotate-hint">
+    <div class="rotate-device" aria-hidden="true">▭</div>
+    <strong>Turn your iPad sideways</strong>
+    <span>Doom's Adventure plays best in landscape.</span>
+  </div>
+
+  <div id="loading" class="loading-screen">
+    <div class="loading-orb"></div>
+    <strong>DOOM'S ADVENTURE</strong>
+    <span>Summoning the Ghastlies…</span>
+  </div>
+
+  <script src="vendor/three.min.js"></script>
   <script src="game.js"></script>
 </body>
 </html>
