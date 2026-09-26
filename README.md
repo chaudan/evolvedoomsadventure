@@ -19,7 +19,7 @@ Defeat 8 Ghastlies, collect their red shadow energy, evolve into Shadow Stalker,
 ## itch.io build
 Every push to `main` creates an `evolvedoomsadventure-html5.zip` artifact in GitHub Actions. It contains `index.html` at the root and is ready for itch.io's HTML5 uploader.
 
-The game currently loads Three.js from jsDelivr, so the player needs an internet connection when launching it.
+The game loads Three.js from jsDelivr, so an internet connection is still required when launching it locally. No local web server is required.
 
 ## Automatic itch.io publishing
 The repository also includes a manual GitHub Action called **Publish to itch.io**.
