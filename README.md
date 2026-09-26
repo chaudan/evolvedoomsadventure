@@ -9,9 +9,11 @@ This prototype is built around the original Doom / Shadow Stalker character art.
 - Third-person 3D island level with a clear path to the Shadow Gate
 - Fully 3D Doom with giant ears, glowing red markings, red eyes, claws, tail, and floating magic orbs
 - Fully 3D Shadow Stalker evolution with larger body, horns, jagged glowing mouth, claws, arrow tail, and overhead orbs
-- Fully 3D hooded Ghastlies with smoky tails, claws, glowing eyes, and floating animation
-- Eight Ghastlies to defeat and eight Shadow Energy pickups to collect
-- Doom evolves into the larger **Shadow Stalker** form
+- Fully 3D **grey** hooded Ghastlies with smoky tails, claws, glowing eyes, and floating animation so they read clearly apart from Doom and Shadow Stalker
+- Five enemy classes introduced over the campaign: **Drifter** (Level 1), **Charger** (10), **Brute** (20), **Hexer** (30), and **Reaper** (40)
+- Later Ghastlies have more health and new behaviours: charges, heavy melee attacks, ranged magic, and faster elite movement
+- **50 playable levels** with gradually larger and tougher Ghastly waves
+- Doom remains Doom through Levels 1–29 and evolves into **Shadow Stalker at Level 30**
 - Shadow Stalker gains a close-range **Shadow Burst**
 - Ancient Ghastly boss fight at the Shadow Gate
 - Auto-aimed orb attacks to make the game friendlier for kids
@@ -45,7 +47,7 @@ For iPad, the easiest way to play is the itch.io HTML5 build in Safari. Landscap
 
 ## Goal
 
-Defeat the eight Ghastlies and collect their Shadow Energy. At 8/8, Doom evolves into Shadow Stalker and the Shadow Gate awakens. Defeat the Ancient Ghastly to save the island.
+Fight through all **50 levels**. New Ghastly types appear every ten levels and the atmosphere changes as Doom approaches the Shadow Gate. Doom evolves into **Shadow Stalker when Level 30 begins**. Level 50 is the final battle against the **Ancient Ghastly** and its guardians.
 
 ## itch.io build
 
@@ -61,4 +63,4 @@ Then run **Actions → Publish to itch.io → Run workflow**.
 
 ## Art direction
 
-The target is a bright, polished, family-friendly fantasy adventure with dark charcoal characters, strong silhouettes, and vivid red shadow magic. The current character models are intentionally simple procedural low-poly builds rather than final production assets, but they are genuine 3D models and are designed to approximate the reference silhouettes closely while keeping the prototype lightweight.
+The target is a bright, polished, family-friendly fantasy adventure. Doom and Shadow Stalker keep the dark charcoal-and-red visual language of the reference art, while Ghastlies now use grey/silver bodies and distinct eye colours so enemies are immediately readable. The current character models are intentionally simple procedural low-poly builds rather than final production assets, but they are genuine 3D models designed to stay lightweight on iPad.
