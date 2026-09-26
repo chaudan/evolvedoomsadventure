@@ -126,7 +126,7 @@
     const core = part(g, new THREE.SphereGeometry(radius, 12, 9), toon(color, { emissive: color, emissiveIntensity: 4 }), [0,0,0], [1,1,1], [0,0,0], false);
     const ringMat = basic(color, .72);
     const r1 = part(g, new THREE.TorusGeometry(radius * 1.35, radius * .11, 6, 20), ringMat, [0,0,0], [1,1,.55], [Math.PI/2,0,0], false);
-    const r2 = part(g, new THREE.TorusGeometry(radius * 1.72, radius * .08, 6, 20), basic(0xff6a7d,.48), [0,0,0], [1,.62,1], [0,0,Math.PI/2], false);
+    const r2 = part(g, new THREE.TorusGeometry(radius * 1.72, radius * .08, 6, 20), basic(color,.48), [0,0,0], [1,.62,1], [0,0,Math.PI/2], false);
     g.userData.core = core;
     g.userData.rings = [r1,r2];
     return g;
@@ -616,7 +616,7 @@
       ui.objectiveText.textContent = level===50 ? 'Defeat the Ancient Ghastly and its guardians!' : `${enemies.length} Ghastlies are haunting this area.`;
       const intro=newTypeAt(level);
       if(intro) showToast(`NEW GHASTLY: ${GHASTLY_TYPES[intro].name.toUpperCase()}!`,1300);
-      else if(level>1) showToast(`LEVEL ${level}`,700);
+      else if(level>1 && level<TOTAL_LEVELS) showToast(`LEVEL ${level}`,700);
     };
 
     if(level===EVOLVE_LEVEL && !evolved){
