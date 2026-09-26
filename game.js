@@ -641,7 +641,7 @@
     const route=routeForLevel(level);
     player.position.set(route.start[0],.3,route.start[1]);
     setupLevelScenery(level,route);
-    createExitPortal(route.exit[0],route.exit[1]);
+    createExitPortal(route.exit[0],route.exit[1],route.start[0],route.start[1]);
     setupLevelObjective(level);
     updateHUD();
 
@@ -724,9 +724,10 @@
     levelItems.push({kind:'treasure',group:chest,gem,done:false});
   }
 
-  function createExitPortal(x,z){
+  function createExitPortal(x,z,startX=0,startZ=0){
     const g=new THREE.Group();
     g.position.set(x,.45,z);
+    g.rotation.y=Math.atan2(startX-x,startZ-z);
     adventureLayer.add(g);
     part(g,new THREE.CylinderGeometry(1.25,1.45,.28,16),mats.ruinDark,[0,.05,0]);
     part(g,new THREE.BoxGeometry(.42,3.2,.5),mats.ruin,[-1.05,1.7,0]);
