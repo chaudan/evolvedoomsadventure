@@ -1220,6 +1220,17 @@
   }
   addEventListener('resize', resize);
   window.visualViewport?.addEventListener('resize', resize);
+  // iOS/iPad Safari can still try to pan or rubber-band the page even when
+  // touch-action:none is set. Lock touch gestures at the document level while
+  // the game is open so joystick/button drags never scroll the page.
+  const stopTouchScroll = (e) => {
+    if (e.cancelable) e.preventDefault();
+  };
+  document.addEventListener('touchstart', stopTouchScroll, { passive: false });
+  document.addEventListener('touchmove', stopTouchScroll, { passive: false });
+  document.addEventListener('gesturestart', stopTouchScroll, { passive: false });
+  document.addEventListener('gesturechange', stopTouchScroll, { passive: false });
+  document.addEventListener('gestureend', stopTouchScroll, { passive: false });
   document.addEventListener('contextmenu', (e) => e.preventDefault());
 
   startGame();
