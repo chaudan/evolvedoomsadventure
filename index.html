@@ -24,18 +24,23 @@
     <div class="hud-card energy-card">
       <div class="energy-icon" aria-hidden="true">✦</div>
       <div class="hud-copy energy-copy">
-        <div class="hud-label">SHADOW ENERGY</div>
+        <div class="hud-label" id="energyLabel">EVOLUTION</div>
         <div class="bar"><div id="energyBar" class="fill energy-fill"></div></div>
-        <div class="meter-text" id="energyText">0 / 8</div>
+        <div class="meter-text" id="energyText">LEVEL 1 / 30</div>
       </div>
     </div>
   </section>
+
+  <div id="levelBadge" class="level-badge">
+    <span id="chapterName">SUNNY SHORE</span>
+    <strong>LEVEL <span id="levelNumber">1</span> / 50</strong>
+  </div>
 
   <aside id="objective" class="objective-card">
     <span class="objective-diamond" aria-hidden="true"></span>
     <div>
       <strong id="objectiveTitle">Defeat the Ghastlies</strong>
-      <span id="objectiveText">Collect their shadow energy to evolve Doom.</span>
+      <span id="objectiveText">Clear each level. Doom evolves into Shadow Stalker at Level 30.</span>
     </div>
   </aside>
 
