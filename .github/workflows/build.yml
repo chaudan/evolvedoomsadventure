@@ -1,0 +1,24 @@
+name: Build itch.io zip
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package HTML5 build
+        run: |
+          mkdir build
+          cp index.html styles.css game.js build/
+          cd build
+          zip -r ../evolvedoomsadventure-html5.zip .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: evolvedoomsadventure-html5
+          path: evolvedoomsadventure-html5.zip
