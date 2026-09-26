@@ -109,6 +109,10 @@
     redGlow: standard(0xff2149, { emissive: 0xff0d38, emissiveIntensity: 3, roughness: 0.35, flat: false })
   };
 
+  const gate = new THREE.Group();
+  const portal = new THREE.Group();
+  let portalPower = 0.18;
+
   buildWorld();
 
   function buildWorld() {
@@ -214,10 +218,6 @@
       }
     }
   }
-
-  const gate = new THREE.Group();
-  const portal = new THREE.Group();
-  let portalPower = 0.18;
 
   function buildGate() {
     gate.position.set(0, 0, -21.5);
