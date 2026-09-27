@@ -19,9 +19,9 @@
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x7fc6ef);
-  scene.fog = new THREE.Fog(0x8dc9e8, 25, 70);
+  scene.fog = new THREE.Fog(0x8dc9e8, 65, 185);
 
-  const camera = new THREE.PerspectiveCamera(56, innerWidth / innerHeight, 0.1, 130);
+  const camera = new THREE.PerspectiveCamera(56, innerWidth / innerHeight, 0.1, 330);
   camera.position.set(0, 7.5, 14);
 
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, isTouch ? 1.35 : 1.8));
@@ -134,117 +134,8 @@
     return g;
   }
 
-  function createDoomModel() {
-    const g = new THREE.Group();
-    const fur = toon(0x111722);
-    const fur2 = toon(0x242b38);
-    const dark = toon(0x070a10);
-    const red = toon(0xff294f, { emissive: 0xff123c, emissiveIntensity: 2.8 });
-    const redDark = toon(0x6b1028, { emissive: 0x3a0012, emissiveIntensity: .8 });
-
-    const body = part(g, new THREE.SphereGeometry(.72, 12, 9), fur, [0,1.05,0], [.78,1.05,.72]);
-    const chest = part(g, new THREE.ConeGeometry(.45,.7,7), fur2, [0,.95,-.48], [1,1,.5], [Math.PI/2,0,0]);
-    const head = part(g, new THREE.SphereGeometry(.65, 14, 10), fur2, [0,1.95,-.03], [1.02,.92,.88]);
-    part(g, new THREE.SphereGeometry(.34,10,8), fur, [0,1.78,-.55], [1.2,.64,.62]);
-
-    const earGeo = new THREE.ConeGeometry(.38,1.35,6);
-    const leftEar = part(g, earGeo, fur, [-.48,2.78,0], [1,1,.72], [0,0,-.18]);
-    const rightEar = part(g, earGeo, fur, [.48,2.78,0], [1,1,.72], [0,0,.18]);
-    part(leftEar, new THREE.ConeGeometry(.21,.92,5), redDark, [0,-.04,-.12], [1,1,.45], [0,0,0], false);
-    part(rightEar, new THREE.ConeGeometry(.21,.92,5), redDark, [0,-.04,-.12], [1,1,.45], [0,0,0], false);
-    for (const ear of [leftEar,rightEar]) {
-      for (let i=0;i<3;i++) part(ear,new THREE.SphereGeometry(.055,6,5),red,[0,.12+i*.22,-.31],[1,.8,.45],[0,0,0],false);
-    }
-
-    for (const x of [-.23,.23]) {
-      const eye = part(g,new THREE.SphereGeometry(.13,10,7),red,[x,1.98,-.58],[1.35,.58,.45],[0,0,0],false);
-      eye.userData.glow = true;
-    }
-    for (const x of [-.19,0,.19]) {
-      part(g,new THREE.ConeGeometry(.055,.34,5),red,[x,2.28,-.57],[1,1,.4],[Math.PI,0,0],false);
-    }
-
-    const armL = part(g,new THREE.CapsuleGeometry(.12,.62,4,7),fur,[-.68,1.22,-.02],[1,1,1],[0,0,-.9]);
-    const armR = part(g,new THREE.CapsuleGeometry(.12,.62,4,7),fur,[.68,1.22,-.02],[1,1,1],[0,0,.9]);
-    const handL = part(g,new THREE.SphereGeometry(.19,8,6),fur2,[-.98,1.18,-.08]);
-    const handR = part(g,new THREE.SphereGeometry(.19,8,6),fur2,[.98,1.18,-.08]);
-    for (const hand of [handL,handR]) {
-      for (let i=-1;i<=1;i++) part(hand,new THREE.ConeGeometry(.045,.22,4),dark,[i*.08,-.02,-.16],[1,1,1],[Math.PI/2,0,0]);
-    }
-
-    const legL = part(g,new THREE.CapsuleGeometry(.15,.46,4,7),fur,[-.34,.38,0],[1,1,1],[0,0,-.08]);
-    const legR = part(g,new THREE.CapsuleGeometry(.15,.46,4,7),fur,[.34,.38,0],[1,1,1],[0,0,.08]);
-    part(g,new THREE.SphereGeometry(.24,8,6),fur2,[-.36,.07,-.13],[1.2,.48,1.45]);
-    part(g,new THREE.SphereGeometry(.24,8,6),fur2,[.36,.07,-.13],[1.2,.48,1.45]);
-
-    const tail = new THREE.Group();
-    tail.position.set(0,.86,.48); tail.rotation.x=-.6; g.add(tail);
-    part(tail,new THREE.ConeGeometry(.28,1.35,7),fur,[0,.45,0],[1,1,.9],[0,0,Math.PI]);
-    part(tail,new THREE.ConeGeometry(.18,.72,7),fur2,[0,1.1,0],[1,1,.9],[0,0,Math.PI]);
-
-    const orbL = makeMagicOrb(g,-1.28,1.43,-.08,.21);
-    const orbR = makeMagicOrb(g,1.28,1.43,-.08,.21);
-    g.userData.magicOrbs=[orbL,orbR];
-    g.userData.animated={armL,armR,tail};
-    g.userData.baseY=0;
-    return g;
-  }
-
-  function createShadowStalkerModel() {
-    const g = new THREE.Group();
-    const fur = toon(0x0c111a);
-    const fur2 = toon(0x202735);
-    const red = toon(0xff244c, { emissive: 0xff0a37, emissiveIntensity: 3.3 });
-    const dark = toon(0x05070b);
-
-    part(g,new THREE.SphereGeometry(1.0,14,10),fur,[0,1.55,0],[1.0,1.25,.88]);
-    part(g,new THREE.SphereGeometry(.82,14,10),fur2,[0,2.82,-.08],[1.05,.9,.9]);
-    const ruff = new THREE.Group(); ruff.position.set(0,2.2,0); g.add(ruff);
-    for(let i=0;i<9;i++){
-      const a=(i/9)*Math.PI*2;
-      const t=part(ruff,new THREE.ConeGeometry(.23,.72,5),fur2,[Math.cos(a)*.72,Math.sin(a)*.18,Math.sin(a)*.56],[1,1,.7],[Math.PI/2,0,-a]);
-      t.rotation.y=a;
-    }
-
-    const hornL = new THREE.Group(); hornL.position.set(-.63,3.28,.02); g.add(hornL);
-    const hornR = new THREE.Group(); hornR.position.set(.63,3.28,.02); hornR.scale.x=-1; g.add(hornR);
-    for(const h of [hornL,hornR]){
-      const seg1=part(h,new THREE.ConeGeometry(.28,1.15,6),fur2,[-.12,.38,0],[1,1,.8],[0,0,.52]);
-      part(h,new THREE.ConeGeometry(.21,.92,6),fur,[.24,1.0,0],[1,1,.72],[0,0,.9]);
-    }
-    for(const x of [-.43,-.16,.16,.43]) part(g,new THREE.ConeGeometry(.12,.62,5),red,[x,3.42,-.16],[1,1,.6],[0,0,x*.35],false);
-
-    for(const x of [-.31,.31]) part(g,new THREE.SphereGeometry(.16,10,7),red,[x,2.94,-.77],[1.55,.55,.42],[0,0,0],false);
-    const mouthY=2.62;
-    for(let i=0;i<7;i++){
-      const x=(i-3)*.16;
-      const up=part(g,new THREE.ConeGeometry(.06,.26,4),red,[x,mouthY,-.79],[1,1,.6],[Math.PI,0,0],false);
-      if(i<6) part(g,new THREE.ConeGeometry(.06,.24,4),red,[x+.08,mouthY-.20,-.79],[1,1,.6],[0,0,0],false);
-    }
-
-    const armL=part(g,new THREE.CapsuleGeometry(.24,1.0,4,8),fur,[-1.05,1.85,0],[1,1,1],[0,0,-.78]);
-    const armR=part(g,new THREE.CapsuleGeometry(.24,1.0,4,8),fur,[1.05,1.85,0],[1,1,1],[0,0,.78]);
-    const handL=part(g,new THREE.SphereGeometry(.35,9,7),fur2,[-1.55,2.28,-.08],[1,1,.9]);
-    const handR=part(g,new THREE.SphereGeometry(.35,9,7),fur2,[1.55,2.28,-.08],[1,1,.9]);
-    for(const hand of [handL,handR]) for(let i=-1;i<=1;i++) part(hand,new THREE.ConeGeometry(.07,.36,4),dark,[i*.13,.02,-.3],[1,1,1],[Math.PI/2,0,0]);
-
-    part(g,new THREE.CapsuleGeometry(.25,.72,4,8),fur,[-.52,.55,0],[1,1,1],[0,0,-.1]);
-    part(g,new THREE.CapsuleGeometry(.25,.72,4,8),fur,[.52,.55,0],[1,1,1],[0,0,.1]);
-    part(g,new THREE.SphereGeometry(.36,9,7),fur2,[-.54,.08,-.16],[1.35,.52,1.55]);
-    part(g,new THREE.SphereGeometry(.36,9,7),fur2,[.54,.08,-.16],[1.35,.52,1.55]);
-
-    const tail=new THREE.Group(); tail.position.set(0,1.15,.65); tail.rotation.x=-.7; g.add(tail);
-    part(tail,new THREE.ConeGeometry(.26,1.75,7),fur,[0,.64,0],[1,1,.9],[0,0,Math.PI]);
-    const arrow=part(tail,new THREE.ConeGeometry(.36,.7,3),red,[0,1.55,0],[1,1,.7],[0,0,Math.PI]);
-    arrow.rotation.y=Math.PI/2;
-
-    const orbL=makeMagicOrb(g,-1.65,3.75,-.1,.34);
-    const orbR=makeMagicOrb(g,1.65,3.75,-.1,.34);
-    g.userData.magicOrbs=[orbL,orbR];
-    g.userData.animated={armL,armR,tail};
-    g.userData.baseY=0;
-    return g;
-  }
+  function createDoomModel() { return window.createBlenderCharacter('doom'); }
+  function createShadowStalkerModel() { return window.createBlenderCharacter('shadow-stalker'); }
 
   function createGhastlyModel(type='drifter', scale=1) {
     const g=new THREE.Group();
@@ -287,6 +178,7 @@
 
     if(type==='charger'){
       for(const x of [-.34,.34]) part(g,new THREE.ConeGeometry(.12,.58,5),smoke2,[x,2.46,-.08],[1,1,.75],[0,0,x<0?-.5:.5]);
+      for(const x of [-.72,.72]) part(g,new THREE.ConeGeometry(.22,.9,6),smoke2,[x,2.25,.05],[1,1,.75],[0,0,x<0?.7:-.7]);
       g.scale.x*=.9;
     }
     if(type==='brute'||type==='boss'){
@@ -297,11 +189,16 @@
       const orb=makeMagicOrb(g,0,1.05,-.58,.16,look.eye);
       orb.userData.isEnemyOrb=true;
       g.userData.magicOrb=orb;
+      part(g,new THREE.CylinderGeometry(.06,.09,1.7,7),smoke2,[.72,1.35,-.3],[1,1,1],[0,0,-.25]);
+      part(g,new THREE.OctahedronGeometry(.18),eyeMat,[.93,1.78,-.38],[1,1,1],[0,0,0],false);
     }
     if(type==='reaper'||type==='boss'){
       for(let i=-2;i<=2;i++){
         part(g,new THREE.ConeGeometry(.09,.5,5),smoke2,[i*.18,2.53-Math.abs(i)*.04,-.02],[1,1,.7],[0,0,i*.14]);
       }
+      const scythe=new THREE.Group();scythe.position.set(-.82,1.65,-.05);g.add(scythe);
+      part(scythe,new THREE.CylinderGeometry(.06,.09,2.2,7),smoke2,[0,.7,0],[1,1,1],[0,0,.35]);
+      part(scythe,new THREE.TorusGeometry(.48,.09,6,12,Math.PI),eyeMat,[.25,1.55,0],[1,1,1],[0,0,-.35],false);
     }
     if(type==='boss'){
       const crown=part(g,new THREE.TorusGeometry(.8,.08,6,20),basic(look.eye,.42),[0,2.28,.05],[1,.72,1],[Math.PI/2,0,0],false);
@@ -345,60 +242,8 @@
   buildWorld();
 
   function buildWorld() {
-    const water = addMesh(new THREE.CircleGeometry(75, 72), standard(0x1d90c9, { roughness: 0.35, flat: false }), root, false, false);
-    water.rotation.x = -Math.PI / 2;
-    water.position.y = -2.15;
-
-    const island = addMesh(new THREE.CylinderGeometry(25, 21, 3.4, 48, 2), mats.soil);
-    island.position.y = -1.55;
-    const cap = addMesh(new THREE.CylinderGeometry(24.65, 24.9, 0.55, 48), mats.grass2);
-    cap.position.y = 0;
-
-    for (let i = 0; i < 18; i++) {
-      const z = 11 - i * 1.75;
-      const x = Math.sin(i * 0.82) * 0.55;
-      const stone = addMesh(new THREE.BoxGeometry(2.25 + rand() * 0.5, 0.16, 1.18 + rand() * 0.35), i % 3 === 0 ? mats.pathDark : mats.path);
-      stone.position.set(x, 0.33 + rand() * 0.05, z);
-      stone.rotation.y = (rand() - 0.5) * 0.22;
-      stone.rotation.z = (rand() - 0.5) * 0.03;
-    }
-
-    for (let i = 0; i < 30; i++) {
-      const a = (i / 30) * Math.PI * 2 + rand() * 0.16;
-      const r = 20.2 + rand() * 3.1;
-      const rock = addMesh(new THREE.DodecahedronGeometry(0.45 + rand() * 0.75, 0), i % 2 ? mats.rock : mats.rockDark);
-      rock.position.set(Math.cos(a) * r, 0.25 + rand() * 0.15, Math.sin(a) * r);
-      rock.scale.set(1.1, 0.65 + rand() * 0.85, 1);
-      rock.rotation.set(rand(), rand() * Math.PI, rand());
-    }
-
-    addPalm(-12, 6, 1.15, -0.16);
-    addPalm(13, 2, 1.05, 0.12);
-    addPalm(-15, -9, 0.9, 0.08);
-    addPalm(15, -12, 0.82, -0.18);
-
-    for (let i = 0; i < 42; i++) {
-      const a = rand() * Math.PI * 2;
-      const r = 5 + rand() * 17;
-      if (Math.abs(Math.cos(a) * r) < 3.2 && Math.sin(a) * r < 13 && Math.sin(a) * r > -20) continue;
-      const bush = addMesh(new THREE.IcosahedronGeometry(0.24 + rand() * 0.5, 0), rand() > .4 ? mats.leaves : mats.leavesLight, root, false, true);
-      bush.position.set(Math.cos(a) * r, 0.42, Math.sin(a) * r);
-      bush.scale.y = 0.55 + rand() * 0.5;
-    }
-
-    const flowerMat = basic(0xfff7d8);
-    for (let i = 0; i < 36; i++) {
-      const x = (rand() - .5) * 30;
-      const z = (rand() - .5) * 27;
-      if (Math.hypot(x, z) > 19 || Math.abs(x) < 2.7) continue;
-      const f = addMesh(new THREE.SphereGeometry(0.08, 5, 4), flowerMat, root, false, false);
-      f.position.set(x, 0.5, z);
-    }
-
-    buildGate();
-    buildBridge(-8.5, 8.6);
-    buildBridge(10.5, 7.2);
-    buildBackgroundIslands();
+    const water=addMesh(new THREE.CircleGeometry(450,64),standard(0x357e9b,{roughness:.65}),root,false,false);
+    water.rotation.x=-Math.PI/2;water.position.y=-2.3;
   }
 
   function addPalm(x, z, s = 1, lean = 0) {
@@ -511,6 +356,10 @@
   }
 
   let player;
+  let worldLayout=null, treeBatches=[], treeMatrices=[], cameraObstacles=[];
+  let storyOrigin=new THREE.Vector3(), navigationTimer=0;
+  const hiddenTrees=new Set();
+  const hiddenTreeMatrix=new THREE.Matrix4().makeScale(0,0,0);
   let playerModel;
   let playerGlow;
   let hp = 120;
@@ -543,11 +392,121 @@
   const hostileProjectiles = [];
   const pickups = [];
   const particles = [];
+  const shockwaves = [];
   const MAX_PARTICLES = isTouch ? 85 : 140;
+
+  const forestLevels = [
+    ['The Glowing Trail','Doom escaped! Find two sparks of red magic.', 'relics', [[-6,7],[5,-5]]],
+    ['Sleeping Stones','The forest remembers Doom. Wake its two rune stones.', 'runes', [[-12,3],[8,-10]]],
+    ['The Lost Key','A Ghastli hid the key in the old grove. Follow the gold glow.', 'key', [[-11,-5]]],
+    ['Lantern Clearing','Light the forgotten lanterns to guide lost travellers.', 'explore', [[6,-2],[-8,-13]]],
+    ['Scattered Starlight','Gather the magic the Ghastlis scattered.', 'relics', [[12,11],[-14,3],[0,-9]]],
+    ['The Root Garden','Wake the stones beneath the tangled trees.', 'runes', [[-6,3],[11,-5],[3,13]]],
+    ['Moonlit Search','Find the key beyond the moonlit ruins.', 'key', [[8,-13]]],
+    ['Watchers of the Woods','Find the three ancient forest beacons.', 'explore', [[-12,11],[14,3],[-3,-14]]],
+    ['Heart of the Forest','Gather the heart sparks. Something huge is waiting ahead.', 'relics', [[-11,-5],[8,-13],[6,-2]]],
+    ['The Leaf Guardian','Dodge the glowing root circle. Strike when the heart shines!', 'boss', []]
+  ];
+  let mode = 'menu', storyTime = 0, storyActors = [];
+  const saveKey = 'dooms-adventure-story-v1';
+  let saved = null, storageAvailable = true;
+  try {
+    const value = JSON.parse(localStorage.getItem(saveKey));
+    if (value && Number.isInteger(value.level) && value.level >= 1 && value.level <= TOTAL_LEVELS) saved = value;
+  } catch (_) { storageAvailable = false; }
+  const panel = document.createElement('section');
+  panel.className = 'story-panel';
+  panel.innerHTML = '<h1></h1><p></p><div class="story-actions"></div>';
+  document.body.appendChild(panel);
+  const pauseButton = document.createElement('button');
+  pauseButton.className = 'pause-button'; pauseButton.textContent = 'Ⅱ Pause';
+  document.body.appendChild(pauseButton);
+  const trailMap=document.createElement('div');trailMap.className='trail-map';
+  document.body.appendChild(trailMap);
+  function resetInput() {
+    keyState.clear(); joyX=joyY=0; joystickPointer=null;
+    actionState.attackHeld=actionState.sprintHeld=actionState.burst=false;
+    ui.joystickKnob.style.transform='translate(0px,0px)';
+    document.querySelectorAll('.pressed').forEach(el=>el.classList.remove('pressed'));
+  }
+  function showPanel(title, text, actions) {
+    resetInput(); panel.classList.remove('hidden');
+    panel.querySelector('h1').textContent=title; panel.querySelector('p').textContent=text;
+    const buttons=panel.querySelector('.story-actions'); buttons.replaceChildren();
+    for (const [label, fn] of actions) {
+      const button=document.createElement('button'); button.textContent=label;
+      button.addEventListener('click',()=>{ensureAudio();fn();}); buttons.appendChild(button);
+    }
+  }
+  function saveProgress() {
+    saved={level:currentLevel};
+    try { localStorage.setItem(saveKey,JSON.stringify(saved)); storageAvailable=true; }
+    catch (_) { storageAvailable=false; }
+  }
+  function playLevel(level) {
+    mode='play'; panel.classList.add('hidden'); resetInput();
+    gameOver=false; won=false; hp=maxHp; invulnerable=1;
+    ui.restartBtn.classList.add('hidden');
+    if(level>EVOLVE_LEVEL && !evolved) evolve();
+    startLevel(level);
+  }
+  function menu() {
+    mode='menu';
+    showPanel("Doom’s Adventure", storageAvailable ? 'A little creature. A hidden power. A forest full of secrets.' : 'Saving is unavailable in this browser. You can still play this session.', [
+      ...(saved ? [[`Continue · Level ${saved.level}`,()=>playLevel(saved.level)]] : []),
+      ['New adventure',()=>saved ? showPanel('Start again?', 'This replaces your saved adventure.', [['Keep my adventure',menu],['Start new story',beginStory]]) : beginStory()]
+    ]);
+  }
+  function pauseGame() {
+    if(mode!=='play'||gameOver||levelTransition) return;
+    mode='paused';
+    showPanel('Take a breather',`Level ${currentLevel} · Progress saves at the start of each level.${storageAvailable?'':' Saving is unavailable in this browser.'}`, [
+      ['Keep playing',()=>{resetInput();mode='play';panel.classList.add('hidden');}],
+      ['Retry level',()=>playLevel(currentLevel)],['Main menu',menu]
+    ]);
+  }
+  pauseButton.addEventListener('click',pauseGame);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden) pauseGame();});
+  addEventListener('blur',()=>{resetInput();pauseGame();});
+  function beginStory() {
+    if(evolved){player.remove(playerModel);disposeObject(playerModel);playerModel=createDoomModel();player.add(playerModel);}
+    evolved=false;maxHp=120;hp=120;playerGlow.scale.setScalar(1);
+    ui.formName.textContent='DOOM';ui.specialBtn.classList.remove('hidden');
+    startLevel(1);clearCombatObjects(); mode='story';storyTime=0;
+    document.body.classList.add('in-story');
+    player.position.set(worldLayout.start[0],.3,worldLayout.start[1]);player.visible=true;
+    storyOrigin.copy(player.position);playerModel.rotation.y=Math.PI;
+    camera.position.copy(storyOrigin).add(new THREE.Vector3(7,4.5,9));updateCamera(1);
+    for(let i=0;i<3;i++) {const actor=createGhastlyModel('drifter',1);scene.add(actor);storyActors.push(actor);}
+    showPanel('Whispering Woods','Doom was following a tiny spark of magic…',[['Skip scene',finishStory]]);
+  }
+  function finishStory() {
+    document.body.classList.remove('in-story');
+    for(const actor of storyActors){scene.remove(actor);actor.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});}
+    storyActors=[];playerModel.rotation.z=0;playerModel.rotation.y=0;playerModel.scale.setScalar(1);playLevel(1);
+  }
+  function updateStory(dt) {
+    storyTime+=dt;
+    const lines=['Doom was following a tiny spark of magic…','Ghastlis: “You are too small to belong here!”','The Ghastlis struck with ghost magic. Doom stumbled back.','But Doom’s orbs shone brighter. There was power inside him.','Doom: “I will find my own way.” Follow the glowing trail!'];
+    panel.querySelector('p').textContent=lines[Math.min(4,Math.floor(storyTime/4))];
+    playerModel.scale.setScalar(storyTime>12?1+Math.sin(storyTime*5)*.025:1);
+    for(const orb of playerModel.userData.magicOrbs||[]) orb.scale.setScalar(storyTime>12?1.5:1);
+    storyActors.forEach((actor,i)=>{
+      const a=i*2.1+storyTime*.15, radius=storyTime<12?3.5:3.5+(storyTime-12)*.6;
+      actor.position.set(storyOrigin.x+Math.sin(a)*radius,1+Math.sin(storyTime*3+i)*.2,storyOrigin.z+Math.cos(a)*radius);
+      actor.rotation.y=Math.atan2(actor.position.x-storyOrigin.x,actor.position.z-storyOrigin.z);
+      if(storyTime>8&&storyTime<12) playerModel.rotation.z=Math.sin(storyTime*12)*.12;
+      else playerModel.rotation.z=0;
+    });
+    if(storyTime>8&&storyTime<12&&Math.floor(storyTime*5)!==Math.floor((storyTime-dt)*5)) burstFX(player.position.clone().add(new THREE.Vector3(0,1,0)),0xb4e6ff,5,2);
+    if(storyTime>=20) finishStory();
+  }
 
   function startGame() {
     createPlayer();
     startLevel(1);
+    clearCombatObjects();
+    menu();
     updateHUD();
     requestAnimationFrame(() => loading.classList.add('ready'));
     setTimeout(() => loading.remove(), 700);
@@ -590,7 +549,7 @@
   ];
 
   function chapterForLevel(level){
-    if(level<10) return {name:'SUNNY SHORE',sky:0x7fc6ef,fog:0x8dc9e8,hemi:0xe8f8ff};
+    if(level<=10) return {name:'WHISPERING WOODS',sky:0x80b7ac,fog:0x8cbea7,hemi:0xe8f8df};
     if(level<20) return {name:'MISTY GROVE',sky:0x7ab6c6,fog:0x789da7,hemi:0xd9f3eb};
     if(level<30) return {name:'STONE RUINS',sky:0x8c9eae,fog:0x7d8892,hemi:0xe1e5e8};
     if(level<40) return {name:'TWILIGHT REACH',sky:0x756f9e,fog:0x635f83,hemi:0xded9ff};
@@ -620,12 +579,19 @@
 
   function isBossLevel(level){ return level % 10 === 0; }
 
-  function routeForLevel(level){
-    return LEVEL_ROUTES[(level-1)%LEVEL_ROUTES.length];
+  function objectiveCount(level) {
+    if(isBossLevel(level)) return 0;
+    if(level<=10) return forestLevels[level-1][3].length;
+    return ['relics','runes','key','explore'][(level-1)%4]==='key'?1:3;
+  }
+  function routeForLevel(level) {
+    return worldLayout && currentLevel===level ? worldLayout : window.DoomWorld.generate(level,objectiveCount(level));
   }
 
   function startLevel(level){
     currentLevel=level;
+    attackCooldown=dashCooldown=dashTimer=burstCooldown=0;
+    player.visible=true;
     levelTransition=true;
     levelStartedAt=elapsed;
     bossSpawned=false;
@@ -637,12 +603,15 @@
     clearCombatObjects();
     clearAdventureLayer();
     setChapterTheme(level);
+    worldLayout=window.DoomWorld.generate(level,objectiveCount(level));
 
     const route=routeForLevel(level);
     player.position.set(route.start[0],.3,route.start[1]);
     setupLevelScenery(level,route);
     createExitPortal(route.exit[0],route.exit[1],route.start[0],route.start[1]);
     setupLevelObjective(level);
+    updateNavigation();
+    camera.position.copy(player.position).add(new THREE.Vector3(0,7,11));
     updateHUD();
 
     const beginLevel=()=>{
@@ -651,23 +620,21 @@
       spawnInitialPatrol(level);
       if(isBossLevel(level)) spawnBossForLevel(level);
       updateObjectiveUI();
+      if(mode==='play') saveProgress();
       const intro=newTypeAt(level);
       if(intro && level!==10) showToast(`NEW GHASTLY: ${GHASTLY_TYPES[intro].name.toUpperCase()}!`,1300);
       else if(level>1) showToast(isBossLevel(level)?`BOSS LEVEL ${level}`:`LEVEL ${level}`,850);
     };
 
-    if(level===EVOLVE_LEVEL && !evolved){
-      evolve();
-      setTimeout(beginLevel,1450);
-    }else{
-      beginLevel();
-    }
+    beginLevel();
   }
 
   function clearAdventureLayer(){
+    treeBatches=[];treeMatrices=[];cameraObstacles=[];hiddenTrees.clear();
     const sharedMaterials=new Set(Object.values(mats));
     while(adventureLayer.children.length){
-      const child=adventureLayer.children.pop();
+      const child=adventureLayer.children[adventureLayer.children.length-1];
+      adventureLayer.remove(child);
       child.traverse?.(o=>{
         if(o.geometry) o.geometry.dispose?.();
         if(o.material && !Array.isArray(o.material) && !sharedMaterials.has(o.material)) o.material.dispose?.();
@@ -678,50 +645,95 @@
     levelObjective=null;
   }
 
-  function setupLevelScenery(level,route){
-    const chapter=Math.floor((level-1)/10);
-    const ruinCount=4+Math.min(7,chapter+Math.floor(level/8));
-    for(let i=0;i<ruinCount;i++){
-      const p=ADVENTURE_POINTS[(i*3+level)%ADVENTURE_POINTS.length];
-      if(Math.hypot(p[0]-route.start[0],p[1]-route.start[1])<4) continue;
-      if(Math.hypot(p[0]-route.exit[0],p[1]-route.exit[1])<4) continue;
-      const g=new THREE.Group();
-      g.position.set(p[0]+((i%2)*1.1-.55),0.28,p[1]);
-      g.rotation.y=((i*1.37+level*.29)%6.28);
-      adventureLayer.add(g);
-      part(g,new THREE.BoxGeometry(1.2+((i+level)%3)*.35,.45,1.0),i%2?mats.ruin:mats.ruinDark,[0,.12,0],[1,1,1],[0,0,0]);
-      if(i%3===0){
-        part(g,new THREE.BoxGeometry(.55,2.4+chapter*.18,.55),mats.ruin,[0,1.35,0]);
-        part(g,new THREE.ConeGeometry(.45,.7,5),mats.ruinDark,[0,2.85+chapter*.18,0]);
-      }else{
-        const rock=part(g,new THREE.DodecahedronGeometry(.65,0),i%2?mats.rock:mats.rockDark,[0,.65,0],[1.3,.85,1]);
-        rock.rotation.y=i;
+  function setupLevelScenery(level,route) {
+    const radius=route.radius;
+    const land=part(adventureLayer,new THREE.CylinderGeometry(radius+2,radius-2,3,72),mats.soil,[0,-1.4,0]);
+    part(adventureLayer,new THREE.CircleGeometry(radius+2,72),mats.grass2,[0,.15,0],[1,1,1],[-Math.PI/2,0,0]);
+    land.receiveShadow=true;
+    const trailMaterial=standard(level<=10?0xa5996e:0x8a8d80);
+    // Connected, winding paths with generous clear space, including treasure branches.
+    for(const [a,b] of route.paths) {
+      const length=Math.hypot(b[0]-a[0],b[1]-a[1]);
+      const path=part(adventureLayer,new THREE.PlaneGeometry(3.5,length+.8),trailMaterial,[(a[0]+b[0])/2,.17,(a[1]+b[1])/2],[1,1,1],[-Math.PI/2,0,0],false);
+      path.rotation.z=-Math.atan2(b[0]-a[0],b[1]-a[1]);
+      const guide=part(adventureLayer,new THREE.SphereGeometry(.12,8,6),standard(0xffd36b,{emissive:0xff9a1e,emissiveIntensity:1.8}),[(a[0]+b[0])*.5,.75,(a[1]+b[1])*.5],[1,1,1],[0,0,0],false);
+      guide.userData.routeGuide=true;
+    }
+    const grove=new THREE.Group();adventureLayer.add(grove);
+    // Four instanced silhouettes keep the large forest cheap on iPad while
+    // making each level feel materially different.
+    const kinds=['broadleaf','pine','willow','crystal'];
+    treeBatches=[];treeMatrices=[];
+    const treeBatchData=[];
+    for(const kind of kinds){
+      const trees=route.trees.filter(t=>t.kind===kind),count=trees.length;
+      const trunkGeo=kind==='crystal'?new THREE.OctahedronGeometry(.75,0):kind==='pine'?new THREE.CylinderGeometry(.18,.48,4,7):new THREE.CylinderGeometry(.3,.62,4.5,7);
+      const crownGeo=kind==='pine'?new THREE.ConeGeometry(2.2,5.2,7):kind==='willow'?new THREE.SphereGeometry(2.0,10,7):kind==='crystal'?new THREE.OctahedronGeometry(2.2,0):new THREE.IcosahedronGeometry(2.25,1);
+      const trunkMat=kind==='crystal'?standard(0x5eb5c4,{emissive:0x205563,emissiveIntensity:1.1}):kind==='willow'?mats.wood:mats.wood;
+      const crownMat=kind==='crystal'?standard(0x67d9e8,{emissive:0x287d92,emissiveIntensity:1.8}):kind==='willow'?mats.leavesLight:kind==='pine'?mats.leaves:mats.leavesLight;
+      const trunk=new THREE.InstancedMesh(trunkGeo,trunkMat,count),crown=new THREE.InstancedMesh(crownGeo,crownMat,count);
+      for(const batch of [trunk,crown]){batch.castShadow=true;batch.receiveShadow=true;grove.add(batch);treeBatches.push(batch);}
+      const matrices=[[],[]],dummy=new THREE.Object3D();
+      trees.forEach((tree,i)=>{
+        const h=tree.height*tree.scale;
+        dummy.position.set(tree.x,.35+h*1.8,tree.z);dummy.rotation.set(0,tree.rotation,0);dummy.scale.set(tree.scale*.9,h*1.05,tree.scale*.9);dummy.updateMatrix();trunk.setMatrixAt(i,dummy.matrix);matrices[0][i]=dummy.matrix.clone();
+        dummy.position.y=.35+h*(kind==='pine'?3.4:kind==='crystal'?2.8:2.9);dummy.scale.set(tree.scale*(kind==='willow'?1.35:1),h*(kind==='pine'?1.25:1),tree.scale*(kind==='willow'?1.35:1));dummy.updateMatrix();crown.setMatrixAt(i,dummy.matrix);matrices[1][i]=dummy.matrix.clone();
+      });
+      for(const batch of [trunk,crown]){batch.instanceMatrix.needsUpdate=true;batch.computeBoundingSphere();}
+      treeBatchData.push({kind,trees,matrices,batches:[trunk,crown]});
+    }
+    treeMatrices=treeBatchData;
+    for(const ruin of route.ruins){
+      const obj=new THREE.Group();obj.position.set(ruin.x,.2,ruin.z);obj.rotation.y=ruin.rotation;adventureLayer.add(obj);
+      obj.userData.solidRadius=1.4;
+      obj.traverse(child=>child.userData.cameraBlocker=true);
+      part(obj,new THREE.BoxGeometry(1.1,4.7,1.1),mats.ruin,[-1,2.3,0]);
+      part(obj,new THREE.BoxGeometry(1.1,3.4,1.1),mats.ruin,[1,1.7,0]);
+      part(obj,new THREE.BoxGeometry(3.2,.7,1.2),mats.ruinDark,[0,4.4,0],[1,1,1],[0,0,.13]);
+      cameraObstacles.push(obj);
+    }
+    for(const item of route.foliage){
+      const g=new THREE.Group();g.position.set(item.x,.25,item.z);g.rotation.y=item.rotation;g.scale.setScalar(item.scale);adventureLayer.add(g);
+      if(item.type==='fern'){
+        for(let i=0;i<6;i++){const a=i*Math.PI/3;part(g,new THREE.ConeGeometry(.08,.9,5),mats.leavesLight,[Math.cos(a)*.35,.45,Math.sin(a)*.35],[1,1,1],[Math.sin(a)*.7,0,-Math.cos(a)*.7]);}
+      } else if(item.type==='mushroom'){
+        part(g,new THREE.CylinderGeometry(.09,.14,.55,7),mats.wood,[0,.28,0]);part(g,new THREE.SphereGeometry(.34,10,6),item.scale>1?mats.leavesLight:mats.redGlow,[0,.63,0],[1,.45,1]);
+      } else if(item.type==='crystal'){
+        // Low environmental crystal bed: clearly scenery, never a floating pickup.
+        part(g,new THREE.CylinderGeometry(.32,.48,.12,8),mats.rockDark,[0,.08,0]);
+        for(let i=0;i<3;i++)part(g,new THREE.ConeGeometry(.13,.42,6),standard(i%2?0x568f9a:0x65758a,{emissive:0x18323a,emissiveIntensity:.35}),[(i-1)*.24,.28+(i%2)*.05,0],[1,1,1],[0,i*.5,0]);
+      } else if(item.type==='deadwood'){
+        part(g,new THREE.CylinderGeometry(.12,.22,1.6,6),mats.wood,[0,.55,0],[1,1,1],[0,0,.9]);part(g,new THREE.ConeGeometry(.3,.7,6),mats.rockDark,[.5,.85,0],[1,.7,1],[0,0,.6]);
+      } else if(item.type==='flower'){
+        part(g,new THREE.CylinderGeometry(.025,.04,.55,5),mats.leaves,[0,.25,0]);for(let i=0;i<5;i++){const a=i*Math.PI*2/5;part(g,new THREE.SphereGeometry(.13,7,5),i%2?mats.redGlow:mats.gold,[Math.cos(a)*.14,.57,Math.sin(a)*.14],[1,.45,1]);}
+      } else {
+        part(g,new THREE.IcosahedronGeometry(.48,1),mats.leavesLight,[0,.45,0],[1,.7,1]);
       }
     }
-
-    const sx=route.start[0], sz=route.start[1], ex=route.exit[0], ez=route.exit[1];
-    for(let i=1;i<=5;i++){
-      const t=i/6;
-      const marker=new THREE.Group();
-      marker.position.set(THREE.MathUtils.lerp(sx,ex,t)+Math.sin(level+i)*1.4,.25,THREE.MathUtils.lerp(sz,ez,t)+Math.cos(level*.6+i)*1.2);
-      adventureLayer.add(marker);
-      part(marker,new THREE.CylinderGeometry(.22,.3,.7,6),mats.wood,[0,.35,0]);
-      const crystal=part(marker,new THREE.OctahedronGeometry(.18,0),standard(0x6cd8ff,{emissive:0x287db8,emissiveIntensity:1.7}),[0,.95,0],[1,.9,1],[0,0,0],false);
-      crystal.userData.pathMarker=true;
+    for(const mark of route.landmarks){
+      const g=new THREE.Group();g.position.set(mark.x,.2,mark.z);g.scale.setScalar(mark.scale);adventureLayer.add(g);g.userData.cameraBlocker=true;
+      if(mark.type==='arch'){part(g,new THREE.BoxGeometry(.55,3.8,.6),mats.ruin,[-1,1.9,0]);part(g,new THREE.BoxGeometry(.55,3.8,.6),mats.ruin,[1,1.9,0]);part(g,new THREE.TorusGeometry(1.25,.22,7,14),mats.ruinDark,[0,3.05,0],[1,1,.45],[Math.PI/2,0,0]);}
+      if(mark.type==='obelisk'){part(g,new THREE.ConeGeometry(.7,4.4,5),mats.ruin,[0,2.2,0]);part(g,new THREE.OctahedronGeometry(.28),mats.redGlow,[0,3.4,-.5], [1,1,1],[0,0,0],false);}
+      if(mark.type==='camp'){part(g,new THREE.ConeGeometry(1.5,2.4,5),mats.wood,[0,1.2,0]);part(g,new THREE.SphereGeometry(.3),mats.gold,[0,.4,-1], [1,.5,1], [0,0,0],false);}
+      if(mark.type==='pond'){part(g,new THREE.CircleGeometry(2.3,18),basic(0x4ec4d5,.6),[0,.08,0],[1,1,1],[-Math.PI/2,0,0],false);}
     }
-
-    createTreasure(level,route);
+    // Distant hills give a larger world a horizon without expensive terrain physics.
+    for(let i=0;i<12;i++){
+      const a=i*Math.PI/6+level*.17,r=radius+12+(i%3)*5;
+      part(adventureLayer,new THREE.IcosahedronGeometry(9+i%3*2,1),i%2?mats.rock:mats.grass,[Math.cos(a)*r,-2,Math.sin(a)*r],[1.4,.6+i%3*.2,1.3]);
+    }
+    for(const p of route.objectives) {
+      const beacon=part(adventureLayer,new THREE.CylinderGeometry(.11,.11,5,6),basic(0xffd36b,.48),[p[0],3,p[1]],[1,1,1],[0,0,0],false);
+      beacon.userData.objectiveBeacon=true;
+    }
+    for(const p of route.treasures) createTreasure(p);
   }
 
-  function createTreasure(level,route){
-    const p=ADVENTURE_POINTS[(level*5+7)%ADVENTURE_POINTS.length];
-    if(Math.hypot(p[0]-route.start[0],p[1]-route.start[1])<4) return;
-    const chest=new THREE.Group();
-    chest.position.set(p[0],.35,p[1]);
-    adventureLayer.add(chest);
+  function createTreasure(p) {
+    const chest=new THREE.Group();chest.position.set(p[0],.35,p[1]);adventureLayer.add(chest);
     part(chest,new THREE.BoxGeometry(1.1,.6,.75),mats.wood,[0,.3,0]);
     part(chest,new THREE.BoxGeometry(1.14,.2,.79),mats.gold,[0,.66,0]);
-    const gem=part(chest,new THREE.OctahedronGeometry(.16,0),standard(0xffc34d,{emissive:0xff9a1e,emissiveIntensity:2.4}),[0,1.0,0],[1,1,1],[0,0,0],false);
+    const gem=part(chest,new THREE.OctahedronGeometry(.16,0),standard(0xffc34d,{emissive:0xff9a1e,emissiveIntensity:2.4}),[0,1,0],[1,1,1],[0,0,0],false);
     levelItems.push({kind:'treasure',group:chest,gem,done:false});
   }
 
@@ -769,13 +781,14 @@
       return;
     }
     const kinds=['relics','runes','key','explore'];
-    const kind=kinds[(level-1)%kinds.length];
-    const count=kind==='key'?1:(level<16?2:3);
+    const authored=forestLevels[level-1];
+    const kind=authored?authored[2]:kinds[(level-1)%kinds.length];
+    const count=authored?authored[3].length:kind==='key'?1:(level<16?2:3);
     levelObjective={kind,done:false,total:count,progress:0};
 
     const used=[];
     for(let i=0;i<count;i++){
-      const p=chooseAdventurePoint(level,i,used);
+      const p=worldLayout.objectives[i];
       used.push(p);
       if(kind==='relics') createRelic(p[0],p[1],i);
       if(kind==='runes') createRuneStone(p[0],p[1],i);
@@ -844,6 +857,12 @@
 
   function updateObjectiveUI(){
     if(!levelObjective) return;
+    if(currentLevel<=10){
+      const data=forestLevels[currentLevel-1];
+      ui.objectiveTitle.textContent=`${currentLevel}. ${data[0]}`;
+      ui.objectiveText.textContent=levelObjective.done?'The forest path is open! Follow the blue portal.':`${data[1]}${currentLevel===10?'':` (${levelObjective.progress}/${levelObjective.total})`}`;
+      return;
+    }
     if(levelObjective.kind==='boss'){
       ui.objectiveTitle.textContent=`Level ${currentLevel}: Defeat the boss`;
       ui.objectiveText.textContent=levelObjective.done?'The portal is open! Reach it.':'Defeat the Ancient Ghastly to unlock the portal.';
@@ -866,8 +885,9 @@
   }
 
   function spawnInitialPatrol(level){
-    const count=isBossLevel(level)?2:Math.min(4,2+Math.floor(level/18));
-    for(let i=0;i<count;i++) spawnRoamingEnemy(i);
+    if(level===10) return;
+    const pool=poolForLevel(level);
+    for(const p of worldLayout.encounters) spawnGhastly(p.x,p.z,pool[p.type%pool.length],p.x*.1);
   }
 
   function spawnRoamingEnemy(seedOffset=0){
@@ -876,13 +896,14 @@
     const pool=poolForLevel(currentLevel);
     const type=pool[(currentLevel+seedOffset+Math.floor(elapsed*2))%pool.length];
     let p=null;
-    for(let j=0;j<LEVEL_SPAWNS.length;j++){
-      const candidate=LEVEL_SPAWNS[(currentLevel*2+seedOffset+j)%LEVEL_SPAWNS.length];
-      if(horizontalDistance(player.position,{x:candidate[0],z:candidate[1]})>7){
-        p=candidate; break;
+    for(let j=0;j<12;j++){
+      const a=(seedOffset+j)*2.399;
+      const candidate=[player.position.x+Math.cos(a)*17,player.position.z+Math.sin(a)*17];
+      if(Math.hypot(...candidate)<worldLayout.radius-5 && !worldLayout.trees.some(t=>Math.hypot(t.x-candidate[0],t.z-candidate[1])<2)){
+        p=candidate;break;
       }
     }
-    if(!p) p=LEVEL_SPAWNS[(seedOffset+currentLevel)%LEVEL_SPAWNS.length];
+    if(!p) return;
     spawnGhastly(p[0],p[1],type,(seedOffset+elapsed)*.61);
   }
 
@@ -890,24 +911,53 @@
     bossSpawned=true;
     portalPower=1.0;
     const route=routeForLevel(level);
-    const bx=(route.exit[0]*.66);
-    const bz=(route.exit[1]*.66);
+    const bx=route.boss[0];
+    const bz=route.boss[1];
     boss=spawnGhastly(bx,bz,'boss',0);
+    if(level===10) {
+      const ud=boss.userData;
+      boss.remove(ud.model);
+      ud.model.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});
+      const tree=new THREE.Group();boss.add(tree);ud.model=tree;ud.modelScale=1;
+      part(tree,new THREE.CylinderGeometry(.9,1.4,3.8,7),mats.wood,[0,1.5,0]);
+      for(let i=0;i<7;i++) {
+        const a=i*Math.PI*2/7;
+        part(tree,new THREE.IcosahedronGeometry(1.2,0),i%2?mats.leaves:mats.leavesLight,[Math.cos(a)*1.5,3.5+Math.sin(i)*.4,Math.sin(a)*1.5]);
+        part(tree,new THREE.ConeGeometry(.35,2.8,5),mats.wood,[Math.cos(a)*1.5,-.3,Math.sin(a)*1.5],[1,1,1],[Math.sin(a)*.9,0,-Math.cos(a)*.9]);
+      }
+      ud.heart=part(tree,new THREE.OctahedronGeometry(.6,0),standard(0xffd956,{emissive:0xffb326,emissiveIntensity:3}),[0,1.8,-1]);
+      ud.leaf=true;ud.cycle=0;ud.slammed=false;ud.hp=ud.maxHp=320;
+      ud.cfg={...ud.cfg,shotColor:0x97dc40,shotDamage:12};
+      const warning=part(adventureLayer,new THREE.RingGeometry(.1,3.6,40),basic(0xffa534,.45),[0,.38,0],[1,1,1],[-Math.PI/2,0,0],false);
+      warning.visible=false;ud.warning=warning;
+    }
     boss.scale.setScalar(.12);
+    document.querySelector('.boss-name').textContent=level===10?'LEAF GUARDIAN':'ANCIENT GHASTLY';
+    ui.bossHealth.style.width='100%';
     ui.bossHud.classList.remove('hidden');
-    showToast(`ANCIENT GHASTLY — LEVEL ${level}`,1350);
+    showToast(`${level===10?'LEAF GUARDIAN':'ANCIENT GHASTLY'} — LEVEL ${level}`,1350);
     sfx('boss');
   }
 
   function clearCombatObjects(){
-    for(const e of [...enemies]) scene.remove(e);
+    for(const e of [...enemies]) {scene.remove(e);disposeObject(e);}
     enemies.length=0;
-    for(const p of [...projectiles]) scene.remove(p);
+    for(const p of [...projectiles]) {scene.remove(p);disposeObject(p);}
     projectiles.length=0;
-    for(const p of [...hostileProjectiles]) scene.remove(p);
+    for(const p of [...hostileProjectiles]) {scene.remove(p);disposeObject(p);}
     hostileProjectiles.length=0;
-    for(const p of [...pickups]) scene.remove(p);
+    for(const p of [...pickups]) {scene.remove(p);disposeObject(p);}
     pickups.length=0;
+  }
+
+  function disposeObject(object) {
+    const shared=new Set(Object.values(mats));
+    object.traverse(child=>{
+      child.geometry?.dispose();
+      for(const material of Array.isArray(child.material)?child.material:[child.material]) {
+        if(material&&!shared.has(material)) material.dispose();
+      }
+    });
   }
 
   function completeLevel(){
@@ -974,24 +1024,52 @@
   }
 
   const keyState = new Set();
-  const actionState = { attackHeld: false, dash: false, burst: false };
+  const actionState = { attackHeld: false, sprintHeld: false, burst: false };
   let joyX = 0, joyY = 0, joystickPointer = null;
+  let orbitPointer = null, orbitLastX = 0, orbitLastY = 0;
+  let orbitYaw = 0, orbitPitch = 0.48;
+
+  // The renderer surface owns camera orbit gestures. UI controls stop their
+  // own pointer events, so dragging the joystick never rotates the camera.
+  renderer.domElement.style.cursor = 'grab';
+  renderer.domElement.style.touchAction = 'none';
+  renderer.domElement.addEventListener('pointerdown', (e) => {
+    if (mode === 'story' || e.target !== renderer.domElement) return;
+    orbitPointer = e.pointerId; orbitLastX = e.clientX; orbitLastY = e.clientY;
+    renderer.domElement.setPointerCapture?.(e.pointerId);
+    renderer.domElement.style.cursor = 'grabbing';
+    e.preventDefault(); ensureAudio();
+  }, { passive: false });
+  renderer.domElement.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== orbitPointer) return;
+    const dx = e.clientX - orbitLastX, dy = e.clientY - orbitLastY;
+    orbitLastX = e.clientX; orbitLastY = e.clientY;
+    orbitYaw -= dx * .008;
+    orbitPitch = THREE.MathUtils.clamp(orbitPitch + dy * .006, .16, 1.05);
+    e.preventDefault();
+  }, { passive: false });
+  const endOrbit = (e) => {
+    if (e.pointerId !== orbitPointer) return;
+    orbitPointer = null; renderer.domElement.style.cursor = 'grab';
+  };
+  renderer.domElement.addEventListener('pointerup', endOrbit);
+  renderer.domElement.addEventListener('pointercancel', endOrbit);
 
   addEventListener('keydown', (e) => {
     ensureAudio();
     keyState.add(e.code);
-    if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') actionState.dash = true;
+    if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') actionState.sprintHeld = true;
     if (e.code === 'KeyE') actionState.burst = true;
     if (e.code === 'KeyR' && gameOver) restart();
     if (['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
   }, { passive: false });
-  addEventListener('keyup', (e) => keyState.delete(e.code));
+  addEventListener('keyup', (e) => { keyState.delete(e.code); if(e.code === 'ShiftLeft' || e.code === 'ShiftRight') actionState.sprintHeld = false; });
 
   ui.attackBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); ensureAudio(); actionState.attackHeld = true; ui.attackBtn.classList.add('pressed'); });
   const releaseAttack = () => { actionState.attackHeld = false; ui.attackBtn.classList.remove('pressed'); };
   ['pointerup','pointercancel','pointerleave'].forEach(ev => ui.attackBtn.addEventListener(ev, releaseAttack));
-  ui.dashBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); ensureAudio(); actionState.dash = true; ui.dashBtn.classList.add('pressed'); });
-  ['pointerup','pointercancel','pointerleave'].forEach(ev => ui.dashBtn.addEventListener(ev, () => ui.dashBtn.classList.remove('pressed')));
+  ui.dashBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); ensureAudio(); actionState.sprintHeld = true; ui.dashBtn.classList.add('pressed'); });
+  ['pointerup','pointercancel','pointerleave'].forEach(ev => ui.dashBtn.addEventListener(ev, () => { actionState.sprintHeld=false; ui.dashBtn.classList.remove('pressed'); }));
   ui.specialBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); ensureAudio(); actionState.burst = true; ui.specialBtn.classList.add('pressed'); });
   ['pointerup','pointercancel','pointerleave'].forEach(ev => ui.specialBtn.addEventListener(ev, () => ui.specialBtn.classList.remove('pressed')));
   ui.restartBtn.addEventListener('pointerdown', restart);
@@ -1023,7 +1101,10 @@
     if (keyState.has('KeyA') || keyState.has('ArrowLeft')) x -= 1;
     if (keyState.has('KeyS') || keyState.has('ArrowDown')) z += 1;
     if (keyState.has('KeyW') || keyState.has('ArrowUp')) z -= 1;
-    const v = new THREE.Vector3(x, 0, z);
+    // Movement follows the orbit camera: pushing up moves toward the top of
+    // the screen, while left/right strafe relative to the view.
+    const local = new THREE.Vector3(x, 0, z);
+    const v = local.applyAxisAngle(new THREE.Vector3(0, 1, 0), orbitYaw);
     if (v.lengthSq() > 1) v.normalize();
     return v;
   }
@@ -1057,20 +1138,20 @@
   }
 
   function dash() {
-    if (dashCooldown > 0 || gameOver) return;
-    dashTimer = .22;
-    dashCooldown = .78;
-    invulnerable = Math.max(invulnerable, .28);
-    burstFX(player.position, 0xff6177, 12, 4.5);
-    sfx('dash');
+    if (gameOver) return;
+    dashTimer = actionState.sprintHeld ? .12 : 0;
+    if (dashTimer > 0 && Math.random() < .12) { burstFX(player.position, 0xff6177, 3, 2.2); sfx('dash'); }
   }
 
   function shadowBurst() {
-    if (!evolved || burstCooldown > 0 || gameOver) return;
-    burstCooldown = 3.0;
-    burstFX(player.position.clone().add(new THREE.Vector3(0, .8, 0)), 0xff153f, isTouch ? 35 : 52, 8.5);
+    if (burstCooldown > 0 || gameOver) return;
+    burstCooldown = 4.0;
+    const color=evolved?0xff153f:0xff7b32;
+    const wave=new THREE.Mesh(new THREE.RingGeometry(.55,.78,48),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.92,side:THREE.DoubleSide}));
+    wave.rotation.x=-Math.PI/2;wave.position.copy(player.position).add(new THREE.Vector3(0,.08,0));wave.userData={life:0,maxLife:.7,maxRadius:evolved?6.3:5.3};scene.add(wave);shockwaves.push(wave);
+    burstFX(player.position.clone().add(new THREE.Vector3(0, .8, 0)), color, isTouch ? 35 : 52, 8.5);
     for (const e of [...enemies]) {
-      if (horizontalDistance(player.position, e.position) < 6.3) damageEnemy(e, 5);
+      if (horizontalDistance(player.position, e.position) < (evolved ? 6.3 : 5.3)) damageEnemy(e, evolved ? 8 : 5);
     }
     sfx('burst');
   }
@@ -1088,7 +1169,7 @@
         dir.set(x,0,z);
       }
       const color=ud.cfg.shotColor||0xbfc5cc;
-      const orb=new THREE.Mesh(new THREE.SphereGeometry(ud.boss ? .36 : .25,12,8),new THREE.MeshBasicMaterial({color}));
+      const orb=new THREE.Mesh(ud.leaf?new THREE.OctahedronGeometry(.6,0):new THREE.SphereGeometry(ud.boss ? .36 : .25,12,8),new THREE.MeshBasicMaterial({color}));
       orb.position.copy(e.position).add(new THREE.Vector3(0,ud.boss?2.4:1.6,0));
       orb.userData={vel:dir.multiplyScalar(ud.boss?7.4:6.4),life:3,damage:ud.cfg.shotDamage||9};
       scene.add(orb); hostileProjectiles.push(orb);
@@ -1098,7 +1179,9 @@
 
   function damageEnemy(e, amount) {
     if (!e.parent || e.userData.hp <= 0) return;
+    if(e.userData.leaf) amount*=e.userData.cycle>3.2?1.8:.35;
     e.userData.hp -= amount;
+    if(e.userData.boss && currentLevel===EVOLVE_LEVEL && !evolved && e.userData.hp<=e.userData.maxHp*.5) evolve();
     e.userData.hitTimer = .14;
     updateEnemyBar(e);
     burstFX(e.position.clone().add(new THREE.Vector3(0, e.userData.boss ? 2.4 : 1.3, 0)), e.userData.cfg.aura, e.userData.boss ? 15 : 8, e.userData.boss ? 5 : 3.5);
@@ -1110,9 +1193,11 @@
     const isBoss=e.userData.boss;
     const pos=e.position.clone();
     scene.remove(e);
+    disposeObject(e);
     const i=enemies.indexOf(e); if(i>=0) enemies.splice(i,1);
     burstFX(pos.clone().add(new THREE.Vector3(0,isBoss?2.2:1.2,0)),isBoss?0xe8edf2:0xb7bec6,isBoss?32:12,isBoss?7:4);
     if(isBoss){
+      if(e.userData.warning) e.userData.warning.visible=false;
       ui.bossHud.classList.add('hidden');
       if(levelObjective && levelObjective.kind==='boss'){
         levelObjective.progress=1;
@@ -1131,6 +1216,7 @@
 
     const old=playerModel;
     player.remove(old);
+    disposeObject(old);
     playerModel=createShadowStalkerModel();
     player.add(playerModel);
     playerGlow.scale.setScalar(1.5);
@@ -1230,7 +1316,8 @@
     const dt = Math.min(clock.getDelta(), .034);
     elapsed += dt;
 
-    if (!gameOver && player) updateGame(dt);
+    if(mode==='story') updateStory(dt);
+    if (mode==='play' && !gameOver && player && !levelTransition) updateGame(dt);
     updateFX(dt);
     animateWorld(dt);
     updateCamera(dt);
@@ -1244,14 +1331,14 @@
     burstCooldown = Math.max(0, burstCooldown - dt);
     invulnerable = Math.max(0, invulnerable - dt);
 
-    if (actionState.dash) { dash(); actionState.dash = false; }
+    dash();
     if (actionState.burst) { shadowBurst(); actionState.burst = false; }
     if (actionState.attackHeld || keyState.has('Space')) shoot();
 
     const move = inputVector();
     if (move.lengthSq() > .001) {
       lastFacing.copy(move).normalize();
-      const speed = (evolved ? 6.1 : 5.4) * (dashTimer > 0 ? 2.25 : 1);
+      const speed = (evolved ? 6.1 : 5.4) * 1.5 * (actionState.sprintHeld ? 1.8 : 1);
       player.position.addScaledVector(move, speed * dt);
       clampPlayer();
       playerBob += dt * (dashTimer > 0 ? 20 : 11);
@@ -1271,6 +1358,14 @@
       anim.armR.rotation.z += (.9 + stride - anim.armR.rotation.z) * .18;
       anim.tail.rotation.z = Math.sin(elapsed * 4.4) * .12;
     }
+    const joints=playerModel.userData.joints;
+    if(joints){
+      const walking=move.lengthSq()>.01,stride=Math.sin(playerBob)*(walking?.40:.025);
+      joints.leg_l.rotation.x=stride;joints.leg_r.rotation.x=-stride;
+      joints.arm_l.rotation.x=-stride*.4;joints.arm_r.rotation.x=stride*.4;
+      joints.tail.rotation.y=Math.sin(elapsed*3)*.13;
+      joints.head.rotation.z=Math.sin(elapsed*1.5)*.025;
+    }
     for (const o of playerModel.userData.magicOrbs || []) {
       const pulse = 1 + Math.sin(elapsed * 7 + o.position.x) * .08;
       o.scale.setScalar(pulse);
@@ -1281,10 +1376,21 @@
     updateEnemies(dt);
     updateAdventure(dt);
     updateEnemySpawning(dt);
+    navigationTimer-=dt;
+    if(navigationTimer<=0){ updateNavigation(); navigationTimer=.25; }
+    navigationTimer-=dt;if(navigationTimer<=0){updateNavigation();navigationTimer=.2;}
+    updateCooldownButtons();
+  }
+
+  function updateCooldownButtons() {
+    const ratio=Math.max(0,Math.min(1,burstCooldown/4));
+    const cover=ui.specialBtn.querySelector('.cooldown-cover');
+    if(cover) cover.style.background=`conic-gradient(rgba(8,10,16,.72) ${ratio*360}deg, transparent ${ratio*360}deg)`;
   }
 
   function updateEnemySpawning(dt){
     if(levelTransition||gameOver) return;
+    if(currentLevel<=10) return; // Authored encounters leave room to explore.
     enemySpawnTimer-=dt;
     if(enemySpawnTimer<=0){
       spawnRoamingEnemy(Math.floor(elapsed*3)%17);
@@ -1329,9 +1435,43 @@
   }
 
   function clampPlayer() {
+    for(const tree of worldLayout.trees) {
+      const dx=player.position.x-tree.x,dz=player.position.z-tree.z,d=Math.hypot(dx,dz),r=tree.scale*.6+.45;
+      if(d<r){player.position.x=tree.x+(d?dx/d:1)*r;player.position.z=tree.z+(d?dz/d:0)*r;}
+    }
+    for(const object of adventureLayer.children) {
+      if(!object.userData.solidRadius) continue;
+      const dx=player.position.x-object.position.x,dz=player.position.z-object.position.z;
+      const distance=Math.hypot(dx,dz),radius=object.userData.solidRadius+.45;
+      if(distance<radius) {
+        player.position.x=object.position.x+(distance?dx/distance:1)*radius;
+        player.position.z=object.position.z+(distance?dz/distance:0)*radius;
+      }
+    }
     const r = Math.hypot(player.position.x, player.position.z);
-    if (r > 22.4) { player.position.x *= 22.4 / r; player.position.z *= 22.4 / r; }
-    player.position.z = THREE.MathUtils.clamp(player.position.z, -18.7, 18.7);
+    const limit=worldLayout.radius;
+    if(r>limit){player.position.x*=limit/r;player.position.z*=limit/r;}
+  }
+
+  function updateNavigation() {
+    if(!worldLayout||!player) return;
+    const dx=worldLayout.exit[0]-player.position.x,dz=worldLayout.exit[1]-player.position.z;
+    trailMap.textContent=`PORTAL ${Math.round(Math.hypot(dx,dz))}m ${Math.abs(dx)>Math.abs(dz)?(dx>0?'→':'←'):(dz>0?'↓':'↑')}`;
+    // Tree silhouettes are grouped by type; camera collision is handled by
+    // the wider third-person distance and clear route corridors.
+    return;
+    // Hide only the instanced trees that sit directly between Doom and the camera.
+    if(!treeBatches.length) return;
+    const look=new THREE.Vector2(player.position.x,player.position.z),cam=new THREE.Vector2(camera.position.x,camera.position.z);
+    for(let i=0;i<worldLayout.trees.length;i++) {
+      const t=worldLayout.trees[i],p=new THREE.Vector2(t.x,t.z),v=cam.clone().sub(look),w=p.clone().sub(look);
+      const dot=w.dot(v)/Math.max(1e-5,v.lengthSq()),distance=dot>0&&dot<1?Math.abs(v.x*w.y-v.y*w.x)/v.length():99;
+      const blocked=dot>0&&dot<1&&distance<t.scale*2.3;
+      if(blocked===hiddenTrees.has(i)) continue;
+      for(const batch of treeBatches) batch.setMatrixAt(i,blocked?hiddenTreeMatrix:treeMatrices[treeBatches.indexOf(batch)][i]);
+      if(blocked)hiddenTrees.add(i);else hiddenTrees.delete(i);
+    }
+    for(const batch of treeBatches) batch.instanceMatrix.needsUpdate=true;
   }
 
   function updateProjectiles(dt) {
@@ -1365,6 +1505,7 @@
     for (const e of [...enemies]) {
       if (!e.parent) continue;
       const ud=e.userData;
+      if(ud.leaf) { updateLeafBoss(e,dt); continue; }
       ud.hitTimer=Math.max(0,ud.hitTimer-dt);
       ud.contactTimer=Math.max(0,ud.contactTimer-dt);
       ud.attackTimer-=dt;
@@ -1437,6 +1578,30 @@
     }
   }
 
+  function updateLeafBoss(e,dt) {
+    const ud=e.userData;
+    e.scale.lerp(new THREE.Vector3(1,1,1),Math.min(1,dt*4));
+    const previous=ud.cycle;
+    ud.cycle+=dt;
+    if(previous<1.2 && ud.cycle>=1.2) {
+      ud.warning.position.set(player.position.x,.38,player.position.z);
+      ud.warning.visible=true;
+      showToast('ROOT SLAM — DASH AWAY!',900);
+    }
+    if(previous<2.8 && ud.cycle>=2.8) {
+      if(horizontalDistance(player.position,ud.warning.position)<3.6) damagePlayer(22);
+      burstFX(ud.warning.position.clone(),0xdac17a,25,6);
+      ud.warning.visible=false;
+      enemyShot(e);
+    }
+    if(previous<3.2 && ud.cycle>=3.2) showToast('THE HEART IS OPEN — FIRE!',900);
+    ud.heart.material.emissiveIntensity=ud.cycle>3.2?5: .4;
+    ud.heart.scale.setScalar(ud.cycle>3.2?1.3: .8);
+    ud.model.rotation.y=Math.atan2(e.position.x-player.position.x,e.position.z-player.position.z);
+    ud.model.rotation.z=Math.sin(ud.cycle*3)*.04;
+    if(ud.cycle>=6.5) ud.cycle=0;
+  }
+
   function updatePickups(dt) {
     for (const p of [...pickups]) {
       p.userData.t += dt;
@@ -1452,6 +1617,11 @@
   }
 
   function updateFX(dt) {
+    for(const wave of [...shockwaves]) {
+      wave.userData.life+=dt;const t=Math.min(1,wave.userData.life/wave.userData.maxLife);
+      wave.scale.setScalar(.6+t*wave.userData.maxRadius/.8);wave.material.opacity=(1-t)*.92;
+      if(t>=1){removeFrom(wave,shockwaves);wave.material.dispose();}
+    }
     for (const p of [...particles]) {
       p.position.addScaledVector(p.userData.v, dt);
       p.userData.v.y -= 3.8 * dt;
@@ -1472,9 +1642,21 @@
 
   function updateCamera(dt) {
     if (!player) return;
-    const desired = player.position.clone().add(new THREE.Vector3(0, evolved ? 7.0 : 6.5, 10.6));
-    const look = player.position.clone().add(new THREE.Vector3(0, evolved ? 1.5 : 1.0, -3.2));
+    const distance = evolved ? 12.8 : 11.8;
+    const height = Math.sin(orbitPitch) * distance + (evolved ? 1.0 : .5);
+    const horizontal = Math.cos(orbitPitch) * distance;
+    const desired = mode==='story'
+      ? player.position.clone().add(new THREE.Vector3(7,5,9))
+      : player.position.clone().add(new THREE.Vector3(Math.sin(orbitYaw)*horizontal, height, Math.cos(orbitYaw)*horizontal));
+    // Keep the character at the centre of the orbit instead of looking past
+    // them; this makes finger and mouse orbiting feel anchored to Doom.
+    const look = player.position.clone().add(new THREE.Vector3(0, evolved ? 1.65 : 1.25, 0));
     const smooth = 1 - Math.pow(.0012, dt);
+    // Pull the camera toward Doom if a ruin/tree blocks the line of sight.
+    const target=player.position.clone().add(new THREE.Vector3(0,evolved?1.65:1.25,0));
+    const ray=new THREE.Raycaster(target,desired.clone().sub(target).normalize(),0.5,desired.distanceTo(target));
+    const hits=ray.intersectObjects(adventureLayer.children,true).filter(hit=>hit.object.visible&&hit.object.userData.cameraBlocker);
+    if(hits.length) desired.lerp(target,.42);
     camera.position.lerp(desired, smooth);
     camera.lookAt(look);
   }
@@ -1523,6 +1705,7 @@
   // touch-action:none is set. Lock touch gestures at the document level while
   // the game is open so joystick/button drags never scroll the page.
   const stopTouchScroll = (e) => {
+    if(e.target.closest('.story-panel button, .pause-button')) return;
     if (e.cancelable) e.preventDefault();
   };
   document.addEventListener('touchstart', stopTouchScroll, { passive: false });

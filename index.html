@@ -62,8 +62,8 @@
       <div id="joystickKnob" class="joystick-knob"></div>
     </div>
     <div class="action-stack">
-      <button id="specialBtn" class="action-button special-button hidden" type="button" aria-label="Shadow Burst"><span>✦</span><small>BURST</small></button>
-      <button id="dashBtn" class="action-button dash-button" type="button" aria-label="Dash"><span>➤</span><small>DASH</small></button>
+      <button id="specialBtn" class="action-button special-button" type="button" aria-label="Power move"><span>✦</span><small>POWER</small><i class="cooldown-cover"></i></button>
+      <button id="dashBtn" class="action-button dash-button" type="button" aria-label="Sprint"><span>➤</span><small>SPRINT</small><i class="cooldown-cover"></i></button>
       <button id="attackBtn" class="action-button attack-button" type="button" aria-label="Fire Doom Orb"><span class="orb-icon"></span><small>ORB</small></button>
     </div>
   </section>
@@ -83,6 +83,9 @@
   </div>
 
   <script src="vendor/three.min.js"></script>
+  <script src="assets/characters/characters.js"></script>
+  <script src="character-models.js"></script>
+  <script src="world-generator.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

@@ -12,10 +12,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check story gameplay
+        run: |
+          node --check game.js
+          node tests/story.test.cjs
       - name: Package HTML5 build
         run: |
           mkdir -p build
           cp index.html styles.css game.js build/
+          cp character-models.js world-generator.js build/
+          mkdir -p build/assets/characters
+          cp assets/characters/characters.js build/assets/characters/
           cp -R vendor build/
           cd build
           zip -r ../evolvedoomsadventure-html5.zip .
